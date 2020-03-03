@@ -5,6 +5,7 @@ import pygame
 
 #each player gets a board
 class BoardGame:
+    #constructor 
     def __init__(self, WINDOW_X, WINDOW_Y, square_size, margin, AMOUNT):
         self.WINDOW_X = WINDOW_X
         self.square_size = square_size
@@ -15,13 +16,21 @@ class BoardGame:
     def make_grid(self, x, y):
         self.grid = []
         self.grid2 = []
+        self.grid3 = []
+        self.grid4 = []
 
         for row in range(self.AMOUNT):
             self.grid.append([])
             self.grid2.append([])
+            self.grid3.append([])
+            self.grid4.append([])
+
             for column in range(self.AMOUNT):
                 self.grid[row].append(0) 
                 self.grid2[row].append(0)
+                self.grid3[row].append(0)
+                self.grid4[row].append(0)
+                
         self.WINDOW_SIZE = [self.WINDOW_X, self.WINDOW_Y + 20]
         
 
@@ -34,6 +43,7 @@ class BoardGame:
 
     def game_logic(self):    
         hitRequest = ""
+        #for loop  records the mouse clicks
         for event in pygame.event.get():  # User did something
             if event.type == pygame.QUIT:  # If user clicked close
                 self.done = True  # Flag that we are done so we exit this loop
@@ -45,12 +55,14 @@ class BoardGame:
                 row = pos[1] // (self.square_size + self.margin)
                 # Set that location to one check location 
                 # this wil also have a check so there is no switching
-                
+
+                # this sees where the hit is either left or right, only suports up 
+                # todo tomorrow 
                 if column < AMOUNT and row < AMOUNT:
                     hitRequest = "HIT [" + str(row) + "," + str(column) + "] GM1\r\nEND"
                     print(hitRequest)
                 else:
-                    self.grid2[row][column - AMOUNT - 1] = 1
+                    self.grid2[row][column - AMOUNT - 2] = 1 #have not figure out whta changes the 2 constant
             
                 
         # Set the screen background
@@ -59,27 +71,14 @@ class BoardGame:
         # Draw the grid
         for row in range(self.AMOUNT):
             for column in range(self.AMOUNT):
-                color = BLUE
-                if self.grid[row][column] == 1:
-                    color = RED
-                pygame.draw.rect(self.screen,
-                         color,
-                         [(MARGIN + self.square_size) * column + MARGIN,
-                          (MARGIN + self.square_size) * row + MARGIN,
-                          self.square_size,
-                          self.square_size])
-                color2 = BLUE
-                if self.grid2[row][column] == 1:
-                    color2 = BLACK
-                elif self.grid2[row][column] == 2:
-                    color2 = RED
-
-                pygame.draw.rect(self.screen,
-                         color2,
-                         [((MARGIN + self.square_size) * column + MARGIN ) + self.WINDOW_X // 2,
-                          (MARGIN + self.square_size) * row + MARGIN,
-                          self.square_size,
-                          self.square_size])
+                color = self.color_single_grid(self.grid, row, column)
+                self.draw_grid_1st(row, column, 0,color)
+                color2 = self.color_2nd(self.grid2, row, column)
+                self.draw_2nd(row, column, 0, color2)
+                color = self.color_single_grid(self.grid3, row, column)
+                self.draw_grid_1st(row, column, WINDOW_Y,color)
+                color2 = self.color_2nd(self.grid4, row, column)
+                self.draw_2nd(row, column, WINDOW_Y, color2)
         # Limit to 60 frames per second
         self.clock.tick(60)
         pygame.display.flip()
@@ -98,7 +97,41 @@ class BoardGame:
             self.grid2[x][y] = 2
             self.grid[x][y] = 1
             print("here")
-            
+    
+    # draws the left grid (the one clicked on)
+    def color_single_grid(self, Grid, row, column):
+        color = BLUE
+        if Grid[row][column] == 1:
+            color = RED
+        return color
+    
+    # left side color in
+    def draw_grid_1st(self, row, column, positionY, color):
+        pygame.draw.rect(self.screen,
+            color,
+            [(MARGIN + self.square_size) * column + MARGIN,
+            (MARGIN + self.square_size) * row + MARGIN + positionY,
+            self.square_size,
+            self.square_size])
+
+    #draws the one that shows hits right side
+    def color_2nd(self, Grid, row, column):
+        color = BLUE
+        if Grid[row][column] == 1:
+            color = BLACK
+        elif Grid[row][column] == 2:
+            color = RED
+        return color
+    # right side color in 
+    def draw_2nd(self, row, column, positionY, color2):
+        pygame.draw.rect(self.screen,
+        color2,
+        [((MARGIN + self.square_size) * column + MARGIN ) + self.WINDOW_X // 2,
+        (MARGIN + self.square_size) * row + MARGIN + positionY,
+        self.square_size,
+        self.square_size]) 
+    
+     
 
 
             
@@ -131,14 +164,14 @@ RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
-WINDOW_X= 418
-WINDOW_Y= 418
-square_size = 20
-
-MARGIN = 2
+WINDOW_X= 400
+WINDOW_Y= 400 
+square_size = 14
+MARGIN = 1
 AMOUNT = WINDOW_Y//(square_size + MARGIN)
 WINDOW_X = WINDOW_Y * 2 + 50
-p1 = BoardGame(WINDOW_X, WINDOW_Y, square_size, MARGIN, AMOUNT)
+
+p1 = BoardGame(WINDOW_X, WINDOW_Y *2, square_size, MARGIN, AMOUNT)
 p1.make_grid(1,1)
 p1.make_window()
 
