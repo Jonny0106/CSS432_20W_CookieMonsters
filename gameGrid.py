@@ -61,9 +61,13 @@ class BoardGame:
                 if column < AMOUNT and row < AMOUNT:
                     hitRequest = "HIT [" + str(row) + "," + str(column) + "] GM1\r\nEND"
                     print(hitRequest)
-                else:
+                elif column > AMOUNT and row < AMOUNT:
                     self.grid2[row][column - AMOUNT - 2] = 1 #have not figure out whta changes the 2 constant
-            
+                elif column < AMOUNT and row > AMOUNT:
+                    print("todo")
+                elif column > AMOUNT and row > AMOUNT:
+                    self.grid4[row - AMOUNT - 1][column - AMOUNT - 2] = 1
+
                 
         # Set the screen background
         self.screen.fill(WHITE)
