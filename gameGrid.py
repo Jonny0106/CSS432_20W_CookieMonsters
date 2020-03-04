@@ -12,6 +12,7 @@ class BoardGame:
         self.margin = margin
         self.AMOUNT = AMOUNT
         self.WINDOW_Y = WINDOW_Y
+
     
     def make_grid(self, x, y):
         self.grid = []
@@ -42,8 +43,8 @@ class BoardGame:
         self.done = False
 
     def game_logic(self):    
-        hitRequest = ""
-        hitRequest2 = ""
+        hitRequest = ""         # hit request for player1
+        hitRequest2 = ""        # hit request for player2
         #for loop  records the mouse clicks
         for event in pygame.event.get():  # User did something
             if event.type == pygame.QUIT:  # If user clicked close
@@ -59,11 +60,13 @@ class BoardGame:
 
                 # this sees where the hit is either left or right, bottom or top 
                 # this is where either hits are rjected or not
-               
+
+
+                # next lines check what grid was clicked. Amount is the length in row and column direction 
+            
                 # top grids
                 if column < AMOUNT and row < AMOUNT:    #left 
-                    
-                    hitRequest = "HIT [" + str(row) + "," + str(column) + "] GM1\r\nEND"
+                    hitRequest = self.makeRequestMssg(row, column)
                     print(hitRequest)
                 
                 elif column > AMOUNT and row < AMOUNT:  #right
@@ -73,22 +76,21 @@ class BoardGame:
                         self.grid2[row][column] = 1 
                 
                 #bottom grids 
-                elif column < AMOUNT and row > AMOUNT:          #left
+                elif column < AMOUNT and row > AMOUNT:          # left
+                    row = row - AMOUNT - YOff                   # taking acount offset created by space between grids and -Amount so it is in graph bounds
+                    if row < AMOUNT and row >= 0:               # sanity check and chking if clicked area was a border not an actual grid
+                        hitRequest2 = self.makeRequestMssg(row, column)
+
+                elif column > AMOUNT and row > AMOUNT:          # right
                     row = row - AMOUNT - YOff
-                    if row < AMOUNT and row >= 0:
-                        hitRequest2 = "HIT [" + str(row) + "," + str(column) + "] GM1\r\nEND"
-                elif column > AMOUNT and row > AMOUNT:          #right
-                    row = row - AMOUNT - YOff
-                    column = column - AMOUNT - XOff
+                    column = column - AMOUNT - XOff             
                     if row < AMOUNT and row >= 0 and column < AMOUNT and column >= 0:
                         self.grid4[row][column] = 1
-
-                
+      
         # Set the screen background
         self.screen.fill(WHITE)
 
-        # Draw the grid
-        
+        # Draw the grid no mouse action monitoring here
         for row in range(self.AMOUNT):
             for column in range(self.AMOUNT):
                 #top grids are made
@@ -106,7 +108,7 @@ class BoardGame:
         # Limit to 60 frames per second
         self.clock.tick(60)
         pygame.display.flip()
-        return hitRequest, hitRequest2
+        return hitRequest, hitRequest2      #tupple of request
 
     def end(self):
         pygame.quit()
@@ -128,6 +130,9 @@ class BoardGame:
 
             print("here")
     
+    def makeRequestMssg(self, row, column):
+        return "HIT [" + str(row) + "," + str(column) + "] GM1\r\nEND"
+
     # draws the left grid (the one clicked on)
     def color_single_grid(self, Grid, row, column):
         color = BLUE
