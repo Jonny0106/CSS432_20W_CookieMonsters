@@ -43,6 +43,7 @@ class BoardGame:
 
     def game_logic(self):    
         hitRequest = ""
+        hitRequest2 = ""
         #for loop  records the mouse clicks
         for event in pygame.event.get():  # User did something
             if event.type == pygame.QUIT:  # If user clicked close
@@ -62,11 +63,11 @@ class BoardGame:
                     hitRequest = "HIT [" + str(row) + "," + str(column) + "] GM1\r\nEND"
                     print(hitRequest)
                 elif column > AMOUNT and row < AMOUNT:
-                    self.grid2[row][column - AMOUNT - 2] = 1 #have not figure out whta changes the 2 constant
+                    self.grid2[row][column - AMOUNT  - XOff] = 1 #have not figure out whta changes the 2 constant
                 elif column < AMOUNT and row > AMOUNT:
-                    print("todo")
+                    hitRequest2 = "HIT [" + str(row) + "," + str(column) + "] GM1\r\nEND"
                 elif column > AMOUNT and row > AMOUNT:
-                    self.grid4[row - AMOUNT - 1][column - AMOUNT - 2] = 1
+                    self.grid4[row - AMOUNT - YOff][column - AMOUNT - XOff] = 1
 
                 
         # Set the screen background
@@ -75,18 +76,21 @@ class BoardGame:
         # Draw the grid
         for row in range(self.AMOUNT):
             for column in range(self.AMOUNT):
+
                 color = self.color_single_grid(self.grid, row, column)
                 self.draw_grid_1st(row, column, 0,color)
                 color2 = self.color_2nd(self.grid2, row, column)
                 self.draw_2nd(row, column, 0, color2)
-                color = self.color_single_grid(self.grid3, row, column)
-                self.draw_grid_1st(row, column, WINDOW_Y,color)
-                color2 = self.color_2nd(self.grid4, row, column)
-                self.draw_2nd(row, column, WINDOW_Y, color2)
+                #bottom grids are built
+                color = self.color_single_grid(self.grid3, row, column) #left bottom 
+                self.draw_grid_1st(row, column, YOff,color)                #left bottom
+                
+                color2 = self.color_2nd(self.grid4, row, column)        #right bottom
+                self.draw_2nd(row, column, YOff, color2)                #right bottom
         # Limit to 60 frames per second
         self.clock.tick(60)
         pygame.display.flip()
-        return hitRequest
+        return hitRequest, hitRequest2
 
     def end(self):
         pygame.quit()
@@ -114,7 +118,7 @@ class BoardGame:
         pygame.draw.rect(self.screen,
             color,
             [(MARGIN + self.square_size) * column + MARGIN,
-            (MARGIN + self.square_size) * row + MARGIN + positionY,
+            (MARGIN + self.square_size) * row + MARGIN + ((MARGIN + self.square_size) * positionY) * (AMOUNT * positionY + 1),
             self.square_size,
             self.square_size])
 
@@ -130,8 +134,8 @@ class BoardGame:
     def draw_2nd(self, row, column, positionY, color2):
         pygame.draw.rect(self.screen,
         color2,
-        [((MARGIN + self.square_size) * column + MARGIN ) + self.WINDOW_X // 2,
-        (MARGIN + self.square_size) * row + MARGIN + positionY,
+        [((MARGIN + self.square_size) * column + MARGIN ) + (MARGIN + self.square_size)* (AMOUNT * XOff + 1),
+        (MARGIN + self.square_size) * row + MARGIN + ((MARGIN + self.square_size) * positionY) * (AMOUNT * positionY + 1),
         self.square_size,
         self.square_size]) 
     
@@ -153,15 +157,18 @@ def main_LOOP(p1):
     while not p1.done:
         if not p1.done:
             hitMessage = p1.game_logic()
-            if hitMessage is "":
+            
+            if hitMessage[0] is "":
                 continue
 
             #send p1.message across
-            p1.readMessege(hitMessage)
+            p1.readMessege(hitMessage[0])
             #send p1.response
 
         
 
+XOff = 1 #amount of tiles apart are the left and right grids 
+YOff = 1 #amount of tiles apart are the top and bottom grids
 
 BLUE = (135,206,250)
 RED = (255, 0, 0)
