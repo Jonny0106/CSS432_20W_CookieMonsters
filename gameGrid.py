@@ -57,17 +57,31 @@ class BoardGame:
                 # Set that location to one check location 
                 # this wil also have a check so there is no switching
 
-                # this sees where the hit is either left or right, only suports up 
-                # todo tomorrow 
-                if column < AMOUNT and row < AMOUNT:
+                # this sees where the hit is either left or right, bottom or top 
+                # this is where either hits are rjected or not
+               
+                # top grids
+                if column < AMOUNT and row < AMOUNT:    #left 
+                    
                     hitRequest = "HIT [" + str(row) + "," + str(column) + "] GM1\r\nEND"
                     print(hitRequest)
-                elif column > AMOUNT and row < AMOUNT:
-                    self.grid2[row][column - AMOUNT  - XOff] = 1 
-                elif column < AMOUNT and row > AMOUNT:
-                    hitRequest2 = "HIT [" + str(row - AMOUNT - YOff) + "," + str(column) + "] GM1\r\nEND"
-                elif column > AMOUNT and row > AMOUNT:
-                    self.grid4[row - AMOUNT - YOff][column - AMOUNT - XOff] = 1
+                
+                elif column > AMOUNT and row < AMOUNT:  #right
+                    column = column - AMOUNT  - XOff
+                    #checks the column is in range
+                    if column < AMOUNT and column >= 0:
+                        self.grid2[row][column] = 1 
+                
+                #bottom grids 
+                elif column < AMOUNT and row > AMOUNT:          #left
+                    row = row - AMOUNT - YOff
+                    if row < AMOUNT and row >= 0:
+                        hitRequest2 = "HIT [" + str(row) + "," + str(column) + "] GM1\r\nEND"
+                elif column > AMOUNT and row > AMOUNT:          #right
+                    row = row - AMOUNT - YOff
+                    column = column - AMOUNT - XOff
+                    if row < AMOUNT and row >= 0 and column < AMOUNT and column >= 0:
+                        self.grid4[row][column] = 1
 
                 
         # Set the screen background
