@@ -63,9 +63,9 @@ class BoardGame:
                     hitRequest = "HIT [" + str(row) + "," + str(column) + "] GM1\r\nEND"
                     print(hitRequest)
                 elif column > AMOUNT and row < AMOUNT:
-                    self.grid2[row][column - AMOUNT  - XOff] = 1 #have not figure out whta changes the 2 constant
+                    self.grid2[row][column - AMOUNT  - XOff] = 1 
                 elif column < AMOUNT and row > AMOUNT:
-                    hitRequest2 = "HIT [" + str(row) + "," + str(column) + "] GM1\r\nEND"
+                    hitRequest2 = "HIT [" + str(row - AMOUNT - YOff) + "," + str(column) + "] GM1\r\nEND"
                 elif column > AMOUNT and row > AMOUNT:
                     self.grid4[row - AMOUNT - YOff][column - AMOUNT - XOff] = 1
 
@@ -74,12 +74,14 @@ class BoardGame:
         self.screen.fill(WHITE)
 
         # Draw the grid
+        
         for row in range(self.AMOUNT):
             for column in range(self.AMOUNT):
+                #top grids are made
+                color = self.color_single_grid(self.grid, row, column)  #left top
+                self.draw_grid_1st(row, column, 0,color)                #
 
-                color = self.color_single_grid(self.grid, row, column)
-                self.draw_grid_1st(row, column, 0,color)
-                color2 = self.color_2nd(self.grid2, row, column)
+                color2 = self.color_2nd(self.grid2, row, column)    #right top
                 self.draw_2nd(row, column, 0, color2)
                 #bottom grids are built
                 color = self.color_single_grid(self.grid3, row, column) #left bottom 
@@ -94,16 +96,22 @@ class BoardGame:
 
     def end(self):
         pygame.quit()
-    
-    def readMessege(self, request):
+    #reads the message passed through the socket(that will be passed)
+    def readMessege(self, request, isTop):
         split = request.split(' ')
         is_hit_message = False
         if split[0] == "HIT":
             cord = (split[1])[1:-1].split(",")
             x = int(cord[0])
             y = int(cord[1])
-            self.grid2[x][y] = 2
-            self.grid[x][y] = 1
+            if isTop:
+                self.grid4[x][y] = 2
+                self.grid[x][y] = 1
+            else:
+                self.grid2[x][y] = 2
+                self.grid3[x][y] = 1
+
+
             print("here")
     
     # draws the left grid (the one clicked on)
@@ -158,12 +166,14 @@ def main_LOOP(p1):
         if not p1.done:
             hitMessage = p1.game_logic()
             
-            if hitMessage[0] is "":
-                continue
-
-            #send p1.message across
-            p1.readMessege(hitMessage[0])
-            #send p1.response
+            if hitMessage[0] is not "":
+                #send p1.message across
+                p1.readMessege(hitMessage[0], True)
+                #send p1.response
+            if hitMessage[1] is not "":
+                #send p1.message across
+                p1.readMessege(hitMessage[1], False)
+                #send p1.response
 
         
 
