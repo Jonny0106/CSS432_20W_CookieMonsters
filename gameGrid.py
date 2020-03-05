@@ -1,7 +1,6 @@
 import pygame
-# will chang
-# Define colors
-
+import battleship
+import player
 
 #each player gets a board
 class BoardGame:
