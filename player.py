@@ -1,6 +1,6 @@
 import battleship
 
-class player:
+class Player:
     
     #player is initialiezed by the server
     def __init__(self, gameID, playerID, firstTurn):

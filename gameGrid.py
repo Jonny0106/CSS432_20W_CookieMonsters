@@ -64,9 +64,10 @@ class BoardGame:
                 # next lines check what grid was clicked. Amount is the length in row and column direction 
             
                 # top grids
-                if column < AMOUNT and row < AMOUNT:    #left 
+                if column < AMOUNT and row < AMOUNT and PLAYER1.isTurn:    #left 
                     hitRequest = self.makeRequestMssg(row, column)
                     print(hitRequest)
+                    PLAYER1.changeTurn()
                 
                 elif column > AMOUNT and row < AMOUNT:  #right
                     column = column - AMOUNT  - XOff
@@ -75,10 +76,11 @@ class BoardGame:
                         self.grid2[row][column] = 1 
                 
                 #bottom grids 
-                elif column < AMOUNT and row > AMOUNT:          # left
+                elif column < AMOUNT and row > AMOUNT and PLAYER2.isTurn:          # left
                     row = row - AMOUNT - YOff                   # taking acount offset created by space between grids and -Amount so it is in graph bounds
                     if row < AMOUNT and row >= 0:               # sanity check and chking if clicked area was a border not an actual grid
                         hitRequest2 = self.makeRequestMssg(row, column)
+                        PLAYER2.changeTurn()
 
                 elif column > AMOUNT and row > AMOUNT:          # right
                     row = row - AMOUNT - YOff
@@ -122,13 +124,16 @@ class BoardGame:
             if isTop:
                 self.grid4[x][y] = 2
                 self.grid[x][y] = 1
+                PLAYER2.changeTurn()
             else:
                 self.grid2[x][y] = 2
                 self.grid3[x][y] = 1
+                PLAYER1.changeTurn()
 
 
             print("here")
     
+    #request sent to server
     def makeRequestMssg(self, row, column):
         return "HIT [" + str(row) + "," + str(column) + "] GM1\r\nEND"
 
@@ -156,6 +161,7 @@ class BoardGame:
         elif Grid[row][column] == 2:
             color = RED
         return color
+
     # right side color in 
     def draw_2nd(self, row, column, positionY, color2):
         pygame.draw.rect(self.screen,
@@ -209,6 +215,9 @@ square_size = 14
 MARGIN = 1
 AMOUNT = WINDOW_Y//(square_size + MARGIN)
 WINDOW_X = WINDOW_Y * 2 + 50
+
+PLAYER1 = player.Player(1, 1, True)
+PLAYER2 = player.Player(1, 2, False)
 
 p1 = BoardGame(WINDOW_X, WINDOW_Y *2, square_size, MARGIN, AMOUNT)
 p1.make_grid(1,1)
