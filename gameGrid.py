@@ -1,6 +1,7 @@
 import pygame
 import battleship
 import player
+import grid
 
 #each player gets a board
 class BoardGame:
@@ -12,34 +13,14 @@ class BoardGame:
         self.AMOUNT = AMOUNT
         self.WINDOW_Y = WINDOW_Y
 
-    
-    def make_grid(self, x, y):
-        self.grid = []
-        self.grid2 = []
-        self.grid3 = []
-        self.grid4 = []
-
-        for row in range(self.AMOUNT):
-            self.grid.append([])
-            self.grid2.append([])
-            self.grid3.append([])
-            self.grid4.append([])
-
-            for column in range(self.AMOUNT):
-                self.grid[row].append(0) 
-                self.grid2[row].append(0)
-                self.grid3[row].append(0)
-                self.grid4[row].append(0)
-                
-        self.WINDOW_SIZE = [self.WINDOW_X, self.WINDOW_Y + 20]
-        
-
     def make_window(self):
+        self.WINDOW_SIZE = [self.WINDOW_X, self.WINDOW_Y + 20]
         pygame.init()
         self.screen = pygame.display.set_mode(self.WINDOW_SIZE)
         pygame.display.set_caption("Array Backed Grid")
         self.clock = pygame.time.Clock()
         self.done = False
+
 
     def game_logic(self):    
         hitRequest = ""         # hit request for player1
@@ -69,11 +50,14 @@ class BoardGame:
                     print(hitRequest)
                     PLAYER1.changeTurn()
                 
-                elif column > AMOUNT and row < AMOUNT:  #right
+                elif column > AMOUNT and row < AMOUNT and PLAYER1.buildTime:  #right
                     column = column - AMOUNT  - XOff
                     #checks the column is in range
                     if column < AMOUNT and column >= 0:
-                        self.grid2[row][column] = 1 
+                        PLAYER1.creatingBoat(row, column)
+                        if not PLAYER1.buildTime:
+                            self.sendStartGame()
+                        
                 
                 #bottom grids 
                 elif column < AMOUNT and row > AMOUNT and PLAYER2.isTurn:          # left
@@ -82,11 +66,15 @@ class BoardGame:
                         hitRequest2 = self.makeRequestMssg(row, column)
                         PLAYER2.changeTurn()
 
-                elif column > AMOUNT and row > AMOUNT:          # right
+                elif column > AMOUNT and row > AMOUNT and PLAYER2.buildTime:          # right
                     row = row - AMOUNT - YOff
                     column = column - AMOUNT - XOff             
                     if row < AMOUNT and row >= 0 and column < AMOUNT and column >= 0:
-                        self.grid4[row][column] = 1
+                        PLAYER2.creatingBoat(row, column)
+                        if not PLAYER2.buildTime:
+                            self.sendStartGame2()
+                        
+
       
         # Set the screen background
         self.screen.fill(WHITE)
@@ -95,24 +83,23 @@ class BoardGame:
         for row in range(self.AMOUNT):
             for column in range(self.AMOUNT):
                 #top grids are made
-                color = self.color_single_grid(self.grid, row, column)  #left top
+                color = self.color_single_grid(PLAYER1.grid, row, column)  #left top
                 self.draw_grid_1st(row, column, 0,color)                #
 
-                color2 = self.color_2nd(self.grid2, row, column)    #right top
+                color2 = self.color_2nd(PLAYER1.grid2, row, column)    #right top
                 self.draw_2nd(row, column, 0, color2)
                 #bottom grids are built
-                color = self.color_single_grid(self.grid3, row, column) #left bottom 
+                color = self.color_single_grid(PLAYER2.grid, row, column) #left bottom 
                 self.draw_grid_1st(row, column, YOff,color)                #left bottom
                 
-                color2 = self.color_2nd(self.grid4, row, column)        #right bottom
+                color2 = self.color_2nd(PLAYER2.grid2, row, column)        #right bottom
                 self.draw_2nd(row, column, YOff, color2)                #right bottom
         # Limit to 60 frames per second
         self.clock.tick(60)
         pygame.display.flip()
         return hitRequest, hitRequest2      #tupple of request
 
-    def end(self):
-        pygame.quit()
+
     #reads the message passed through the socket(that will be passed)
     def readMessege(self, request, isTop):
         split = request.split(' ')
@@ -122,17 +109,15 @@ class BoardGame:
             x = int(cord[0])
             y = int(cord[1])
             if isTop:
-                self.grid4[x][y] = 2
-                self.grid[x][y] = 1
-                PLAYER2.changeTurn()
+                PLAYER2.grid2[x][y] = 2
+                PLAYER1.grid[x][y] = 1
+                PLAYER2.changeTurn()      
             else:
-                self.grid2[x][y] = 2
-                self.grid3[x][y] = 1
+                PLAYER1.grid2[x][y] = 2
+                PLAYER2.grid[x][y] = 1
                 PLAYER1.changeTurn()
 
 
-            print("here")
-    
     #request sent to server
     def makeRequestMssg(self, row, column):
         return "HIT [" + str(row) + "," + str(column) + "] GM1\r\nEND"
@@ -171,19 +156,16 @@ class BoardGame:
         self.square_size,
         self.square_size]) 
     
-     
+    def sendStartGame(self):
+        PLAYER1.startGussing()
+        PLAYER2.startGussing()
 
-
-            
-        
-
-
+    def sendStartGame2(self):
+        PLAYER1.startGussing()
+        PLAYER2.startGussing()
  
-            # Go ahead and update the screen with what we've drawn.
-        
-    # Be IDLE friendly. If you forget t
-    # his line, the program will 'hang'
-    # on exit.
+           
+    
 
 def main_LOOP(p1):
     while not p1.done:
@@ -218,9 +200,10 @@ WINDOW_X = WINDOW_Y * 2 + 50
 
 PLAYER1 = player.Player(1, 1, True)
 PLAYER2 = player.Player(1, 2, False)
+PLAYER1.make_grid(AMOUNT)                   # creates grid for player1(top)
+PLAYER2.make_grid(AMOUNT)                   # creates grid for player2(bottom)
 
 p1 = BoardGame(WINDOW_X, WINDOW_Y *2, square_size, MARGIN, AMOUNT)
-p1.make_grid(1,1)
 p1.make_window()
 
 main_LOOP(p1)

@@ -20,6 +20,7 @@ class Battleship:
         # slot has been hit, return false
         else:
             return False
+            
 
     def isSunk(self):
         # iterate through status, check for slot that has not been hit
