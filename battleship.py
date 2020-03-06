@@ -3,7 +3,8 @@ import pygame
 
 # game initializes a number of Battleships with a determined size and a player-chosen start and end position
 class Battleship:
-    def __init__(self, size, start, end):
+    def __init__(self, size, start, end, locations):
+        self.locations = locations
         # size of battleship
         self.size = size
         # array to keep track of hit/not hit

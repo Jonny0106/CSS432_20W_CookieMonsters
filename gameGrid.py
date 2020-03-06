@@ -109,13 +109,22 @@ class BoardGame:
             x = int(cord[0])
             y = int(cord[1])
             if isTop:
-                PLAYER2.grid2[x][y] = 2
-                PLAYER1.grid[x][y] = 1
+                if PLAYER2.hitsBoats(x, y):
+                    PLAYER2.grid2[x][y] = 3
+                    PLAYER1.grid[x][y] = 1
+                else:
+                    PLAYER2.grid2[x][y] = 2
+                    PLAYER1.grid[x][y] = 1
                 PLAYER2.changeTurn()      
             else:
-                PLAYER1.grid2[x][y] = 2
-                PLAYER2.grid[x][y] = 1
+                if PLAYER1.hitsBoats(x, y):
+                    PLAYER1.grid2[x][y] = 3
+                    PLAYER2.grid[x][y] = 1
+                else:
+                    PLAYER1.grid2[x][y] = 2
+                    PLAYER2.grid[x][y] = 1
                 PLAYER1.changeTurn()
+
 
 
     #request sent to server
@@ -144,6 +153,8 @@ class BoardGame:
         if Grid[row][column] == 1:
             color = BLACK
         elif Grid[row][column] == 2:
+            color = WHITE
+        elif Grid[row][column] == 3:
             color = RED
         return color
 
@@ -173,10 +184,13 @@ def main_LOOP(p1):
             hitMessage = p1.game_logic()
             
             if hitMessage[0] is not "":
+                # p1.sendMessage(hitMessage[0], True)
                 #send p1.message across
                 p1.readMessege(hitMessage[0], True)
                 #send p1.response
+            
             if hitMessage[1] is not "":
+                # p1.sendMessage(hitMessage[1], False)
                 #send p1.message across
                 p1.readMessege(hitMessage[1], False)
                 #send p1.response
