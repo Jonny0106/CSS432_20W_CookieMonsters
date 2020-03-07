@@ -96,7 +96,7 @@ class BoardGame:
         pygame.display.flip()
         return hitRequest, hitRequest2  # tupple of request
 
-    # reads the message passed through the socket(that will be passed)
+    #reads the message passed through the socket(that will be passed)
     def readMessege(self, request, isTop):
         split = request.split(' ')
         is_hit_message = False
@@ -105,12 +105,20 @@ class BoardGame:
             x = int(cord[0])
             y = int(cord[1])
             if isTop:
-                PLAYER2.grid2[x][y] = 2
-                PLAYER1.grid[x][y] = 1
-                PLAYER2.changeTurn()
+                if PLAYER2.hitsBoats(x, y):
+                    PLAYER2.grid2[x][y] = 3
+                    PLAYER1.grid[x][y] = 2
+                else:
+                    PLAYER2.grid2[x][y] = 2
+                    PLAYER1.grid[x][y] = 1
+                PLAYER2.changeTurn()      
             else:
-                PLAYER1.grid2[x][y] = 2
-                PLAYER2.grid[x][y] = 1
+                if PLAYER1.hitsBoats(x, y):
+                    PLAYER1.grid2[x][y] = 3
+                    PLAYER2.grid[x][y] = 2
+                else:
+                    PLAYER1.grid2[x][y] = 2
+                    PLAYER2.grid[x][y] = 1
                 PLAYER1.changeTurn()
 
     # request sent to server
@@ -121,6 +129,8 @@ class BoardGame:
     def color_single_grid(self, Grid, row, column):
         color = BLUE
         if Grid[row][column] == 1:
+            color = BLACK
+        elif Grid[row][column] == 2:
             color = RED
         return color
 
@@ -134,12 +144,14 @@ class BoardGame:
                           self.square_size,
                           self.square_size])
 
-    # draws the one that shows hits right side
+    #draws the one that shows hits right side
     def color_2nd(self, Grid, row, column):
         color = BLUE
         if Grid[row][column] == 1:
             color = BLACK
         elif Grid[row][column] == 2:
+            color = WHITE
+        elif Grid[row][column] == 3:
             color = RED
         return color
 
