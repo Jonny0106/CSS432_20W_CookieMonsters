@@ -1,8 +1,7 @@
 import pygame
 import battleship
 import player
-#import grid
-
+import enum
 
 # each player gets a board
 class BoardGame:
@@ -22,13 +21,13 @@ class BoardGame:
         self.clock = pygame.time.Clock()
         self.done = False
 
-    def game_logic(self):
+    def game_Event(self):
         hitRequest = ""  # hit request for player1
         hitRequest2 = ""  # hit request for player2
         # for loop  records the mouse clicks
         for event in pygame.event.get():  # User did something
             if event.type == pygame.QUIT:  # If user clicked close
-                self.done = True  # Flag that we are done so we exit this loop
+                self.done = True  # Flag that we are done so we exit this loop 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 # User clicks the mouse. Get the position
                 pos = pygame.mouse.get_pos()
@@ -45,9 +44,10 @@ class BoardGame:
 
                 # top grids
                 if column < AMOUNT and row < AMOUNT and PLAYER1.isTurn:  # left
-                    hitRequest = self.makeRequestMssg(row, column)
-                    print(hitRequest)
-                    PLAYER1.changeTurn()
+                    if PLAYER1.grid[row][column] == 0:
+                        hitRequest = self.makeRequestMssg(row, column)
+                        print(hitRequest)
+                        PLAYER1.changeTurn()
 
                 elif column > AMOUNT and row < AMOUNT and PLAYER1.buildTime:  # right
                     column = column - AMOUNT - XOff
@@ -61,7 +61,7 @@ class BoardGame:
                 # bottom grids
                 elif column < AMOUNT and row > AMOUNT and PLAYER2.isTurn:  # left
                     row = row - AMOUNT - YOff  # taking acount offset created by space between grids and -Amount so it is in graph bounds
-                    if row < AMOUNT and row >= 0:  # sanity check and chking if clicked area was a border not an actual grid
+                    if row < AMOUNT and row >= 0 and PLAYER2.grid[row][column] == 0:  # sanity check and chking if clicked area was a border not an actual grid
                         hitRequest2 = self.makeRequestMssg(row, column)
                         PLAYER2.changeTurn()
 
@@ -72,7 +72,8 @@ class BoardGame:
                         PLAYER2.creatingBoat(row, column)
                         if not PLAYER2.buildTime:
                             self.sendStartGame2()
-
+        return hitRequest, hitRequest2  # tupple of request
+    def game_Coloring(self):
         # Set the screen background
         self.screen.fill(WHITE)
 
@@ -94,36 +95,71 @@ class BoardGame:
         # Limit to 60 frames per second
         self.clock.tick(60)
         pygame.display.flip()
-        return hitRequest, hitRequest2  # tupple of request
 
     #reads the message passed through the socket(that will be passed)
     def readMessege(self, request, isTop):
+        sendMessage = ""
         split = request.split(' ')
         is_hit_message = False
-        if split[0] == "HIT":
+        if split[0] == "GUESS":
             cord = (split[1])[1:-1].split(",")
-            x = int(cord[0])
-            y = int(cord[1])
+            row = int(cord[0])
+            column = int(cord[1])
             if isTop:
-                if PLAYER2.hitsBoats(x, y):
-                    PLAYER2.grid2[x][y] = 3
-                    PLAYER1.grid[x][y] = 2
+                if PLAYER2.hitsBoats(row, column):
+                    PLAYER2.grid2[row][column] = 3
+                    if len(PLAYER2.BoatDict) == 0:
+                        sendMessage = "END [" + str(1) + "," + str(0) + "] GM1\r\nEND"
+                    else:
+                        sendMessage = "HIT [" + str(row) + "," + str(column) + "] "+ str(PLAYER2.gameID) + "\r\nEND"
                 else:
-                    PLAYER2.grid2[x][y] = 2
-                    PLAYER1.grid[x][y] = 1
+                    PLAYER2.grid2[row][column] = 2
+                    sendMessage = "MISS [" + str(row) + "," + str(column) + "] GM1\r\nEND"
                 PLAYER2.changeTurn()      
             else:
-                if PLAYER1.hitsBoats(x, y):
-                    PLAYER1.grid2[x][y] = 3
-                    PLAYER2.grid[x][y] = 2
+                if PLAYER1.hitsBoats(row, column):
+                    PLAYER1.grid2[row][column] = 3
+                    if len(PLAYER1.BoatDict) == 0:
+                        sendMessage = "END [" + str(1) + "," + str(0) + "] GM1\r\nEND"
+                    else:
+                        sendMessage = "HIT [" + str(row) + "," + str(column) + "] GM1\r\nEND"
                 else:
-                    PLAYER1.grid2[x][y] = 2
-                    PLAYER2.grid[x][y] = 1
+                    PLAYER1.grid2[row][column] = 2
+                    sendMessage = "MISS [" + str(row) + "," + str(column) + "] GM1\r\nEND"
                 PLAYER1.changeTurn()
-
+        return sendMessage
+        
+    def readRespMessege(self, response, isTop):
+        split = response.split(' ')
+        is_hit_message = False
+        cord = (split[1])[1:-1].split(",")
+        row = int(cord[0])
+        column = int(cord[1])
+        if isTop:
+            if split[0] == "HIT":
+                PLAYER1.grid[row][column] = 2
+            elif split[0] == "MISS":
+                PLAYER1.grid[row][column] = 1
+            elif split[0] == "END":
+                if row == 1:
+                    PLAYER1.win = True
+                    PLAYER1.grid = [[2 for i in range(self.AMOUNT)] for j in range(self.AMOUNT)] 
+                self.done = True
+        else:
+            if split[0] == "HIT":
+                PLAYER2.grid[row][column] = 2
+            elif split[0] == "MISS":
+                PLAYER2.grid[row][column] = 1
+            elif split[0] == "END":
+                if row == 1:
+                    PLAYER2.win = True
+                    PLAYER2.grid = [[2 for i in range(self.AMOUNT)] for j in range(self.AMOUNT)] 
+                self.done = True
+                
+    
     # request sent to server
     def makeRequestMssg(self, row, column):
-        return "HIT [" + str(row) + "," + str(column) + "] GM1\r\nEND"
+        return "GUESS [" + str(row) + "," + str(column) + "] GM1\r\nEND"
 
     # draws the left grid (the one clicked on)
     def color_single_grid(self, Grid, row, column):
@@ -166,6 +202,7 @@ class BoardGame:
                           self.square_size,
                           self.square_size])
 
+
     def sendStartGame(self):
         PLAYER1.startGussing()
         PLAYER2.startGussing()
@@ -176,18 +213,33 @@ class BoardGame:
 
 
 def main_LOOP(p1):
-    while not p1.done:
+    timeOut = 0
+    while not p1.done and timeOut < 2:
         if not p1.done:
-            hitMessage = p1.game_logic()
-
+            hitMessage = p1.game_Event()
             if hitMessage[0] is not "":
+
                 # send p1.message across
-                p1.readMessege(hitMessage[0], True)
+                response = p1.readMessege(hitMessage[0], True)
                 # send p1.response
-            if hitMessage[1] is not "":
+                p1.readRespMessege(response, True)
+            elif hitMessage[1] is not "":
                 # send p1.message across
-                p1.readMessege(hitMessage[1], False)
+                response = p1.readMessege(hitMessage[1], False)
+                p1.readRespMessege(response, False)
                 # send p1.response
+        else:
+            timeOut += 1
+        p1.game_Coloring()
+
+class Mess_Type(enum.Enum):
+    GUESS = 0
+    HIT = 1
+    MISS = 2
+    END = 3
+    START = 4
+    STARTGUESS = 5
+
 
 
 XOff = 1  # amount of tiles apart are the left and right grids
@@ -204,20 +256,29 @@ square_size = 14
 MARGIN = 1
 AMOUNT = WINDOW_Y // (square_size + MARGIN)
 WINDOW_X = WINDOW_Y * 2 + 50
+while True:
+    PLAYER1 = player.Player(1)
+    PLAYER1.gameID = 1
+    PLAYER1.firstTurn = True
 
-PLAYER1 = player.Player(1)
-PLAYER1.gameID = 1
-PLAYER1.firstTurn = True
+    PLAYER2 = player.Player(2)
+    PLAYER2.gameID = 2
+    PLAYER2.firstTurn = False
 
-PLAYER2 = player.Player(2)
-PLAYER2.gameID = 2
-PLAYER2.firstTurn = False
+    PLAYER1.make_grid(AMOUNT)  # creates grid for player1(top)
+    PLAYER2.make_grid(AMOUNT)  # creates grid for player2(bottom)
 
-PLAYER1.make_grid(AMOUNT)  # creates grid for player1(top)
-PLAYER2.make_grid(AMOUNT)  # creates grid for player2(bottom)
+    p1 = BoardGame(WINDOW_X, WINDOW_Y * 2, square_size, MARGIN, AMOUNT)
+    p1.make_window()
 
-p1 = BoardGame(WINDOW_X, WINDOW_Y * 2, square_size, MARGIN, AMOUNT)
-p1.make_window()
+    main_LOOP(p1)
+    pygame.quit()
+    if PLAYER1.win == True:
+        print("you won!")
+    else:
+        print("you lost")
 
-main_LOOP(p1)
-pygame.quit()
+    x = input("Want to play again:(y/n)")
+    if x.capitalize() != "Y":
+        print("OK have it your way. Bye...")
+        break

@@ -8,7 +8,7 @@ class Battleship:
         # size of battleship
         self.size = size
         # array to keep track of hit/not hit
-        self.status = [size]
+        self.status = [ False for i in range(size)] # list comprehenion
         # start and end position on grid
         self.start = start
         self.end = end

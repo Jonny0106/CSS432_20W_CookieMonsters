@@ -20,17 +20,19 @@ class Player:
         self.chosenBuild = []
         self.maxBoatSize = 7
         self.tickerStart = 0
+        self.win = False
 
     def make_grid(self, AMOUNT):
         self.AMOUNT = AMOUNT
         self.grid = []
         self.grid2 = []
+        
         for row in range(self.AMOUNT):
             self.grid.append([])
             self.grid2.append([])
             for column in range(self.AMOUNT):
                 self.grid[row].append(0)
-                self.grid2[row].append(0)
+                self.grid2[row].append(0)     
 
     # changes turn once done
     def changeTurn(self):
@@ -139,15 +141,21 @@ class Player:
         if size == 0:
             size = start[1] - end[1]
             #column offset how tall
-        self.BoatDict[size] = battleship.Battleship(size,start, end, locationList)
+        self.BoatDict[size] = battleship.Battleship(size, start, end, locationList)
         self.boatBuildingNum += 1
 
 
     # colision check
     def hitsBoats(self, row, column):
+        
         for boat in self.BoatDict.keys():
+            i = -1
             for square in self.BoatDict[boat].locations:
+                i += 1
                 if row == square[0] and column == square[1]:
+                    if self.BoatDict[boat].hit(i) and self.BoatDict[boat].isSunk():
+                        self.BoatDict.pop(boat)
+
                     return True
         
         return False
