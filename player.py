@@ -26,7 +26,7 @@ class Player:
         self.AMOUNT = AMOUNT
         self.grid = []
         self.grid2 = []
-        
+
         for row in range(self.AMOUNT):
             self.grid.append([])
             self.grid2.append([])
@@ -155,7 +155,8 @@ class Player:
                 if row == square[0] and column == square[1]:
                     if self.BoatDict[boat].hit(i) and self.BoatDict[boat].isSunk():
                         self.BoatDict.pop(boat)
-
+                        #pops boat if sunk
+                    
                     return True
         
         return False

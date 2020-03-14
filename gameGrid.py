@@ -97,6 +97,7 @@ class BoardGame:
         pygame.display.flip()
 
     #reads the message passed through the socket(that will be passed)
+    # at this moment no socket so all done localy
     def readMessege(self, request, isTop):
         sendMessage = ""
         split = request.split(' ')
@@ -128,7 +129,8 @@ class BoardGame:
                     sendMessage = "MISS [" + str(row) + "," + str(column) + "] GM1\r\nEND"
                 PLAYER1.changeTurn()
         return sendMessage
-        
+
+    # reads response message and updates board    
     def readRespMessege(self, response, isTop):
         split = response.split(' ')
         is_hit_message = False
@@ -144,6 +146,7 @@ class BoardGame:
                 if row == 1:
                     PLAYER1.win = True
                     PLAYER1.grid = [[2 for i in range(self.AMOUNT)] for j in range(self.AMOUNT)] 
+                    # when end the screen turns red
                 self.done = True
         else:
             if split[0] == "HIT":
@@ -153,7 +156,8 @@ class BoardGame:
             elif split[0] == "END":
                 if row == 1:
                     PLAYER2.win = True
-                    PLAYER2.grid = [[2 for i in range(self.AMOUNT)] for j in range(self.AMOUNT)] 
+                    PLAYER2.grid = [[2 for i in range(self.AMOUNT)] for j in range(self.AMOUNT)]
+                    # when end the screen turns red 
                 self.done = True
                 
     
@@ -232,6 +236,7 @@ def main_LOOP(p1):
             timeOut += 1
         p1.game_Coloring()
 
+#enumeration of message types
 class Mess_Type(enum.Enum):
     GUESS = 0
     HIT = 1
@@ -273,11 +278,13 @@ while True:
 
     main_LOOP(p1)
     pygame.quit()
+    # only player1's staus is brodcasted
     if PLAYER1.win == True:
         print("you won!")
     else:
         print("you lost")
 
+    # do thy want to play again
     x = input("Want to play again:(y/n)")
     if x.capitalize() != "Y":
         print("OK have it your way. Bye...")
