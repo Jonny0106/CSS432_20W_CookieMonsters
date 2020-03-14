@@ -1,16 +1,22 @@
-from gameGrid import BoardGame
+# from gameGrid import BoardGame
 import uuid
 import socket
 import player
+from _thread import *
+import threading
+import time
+import json
+
+lock = threading.Lock()
 
 # dictionary of all users
 # key = playerID
-# value = player object
+# value = player object, socket (addr)
 Users = {}
 
 # dictionary of all of the game IDs to game objects
 # key = gameID
-# value = gameGrid object
+# value = [player1_id, player2_id]
 OngoingGames = {}
 
 # dictionary of all of the games with only one person there
@@ -18,46 +24,70 @@ OngoingGames = {}
 # value = playerID
 WaitingGames = {}
 
-def add_new_user():
-    player_id = uuid.uuid1()
-    new_player = player.Player(player_id)
-    Users[player_id] = new_player
-    return player_id
 
-def create_new_game(player_id):
-    player = Users[player_id]
-    game_id = uuid.uuid1()
-    if player is not None:
-        player.gameID = game_id
-        player.firstTurn = True
-        WaitingGames[game_id] = player_id
-        return True
-    return False
+def handle_client_thread(c):
+    while True:
+        client_msg = c.recv(1024).decode('utf-8', 'ignore')
+        # print(client_msg)
+        new_player = ""
+        if client_msg == "NEW":
+            print(client_msg)
+            new_player = uuid.uuid1()
+            new_player = str(new_player)
+            print("New player: " + new_player)
+            c.send(new_player.encode())
+            Users[new_player] = c
+            print()
+            # client_choice = c.recv(1024).decode('utf-8', 'ignore')
+            # print(client_choice)
+        elif "CREATE" in client_msg:
+            print(client_msg)
+            new_game_id = str(uuid.uuid1())
+            player_id = client_msg.split()[1]
+            WaitingGames[new_game_id] = player_id
+            print(new_game_id + " created for " + player_id)
+            print(WaitingGames)
+            print()
+        elif "JOIN" in client_msg:
+            print(client_msg)
+            split_msg = client_msg.split()
+            requested_game_id = split_msg[2]
+            if requested_game_id in WaitingGames:
+                other_player_id = WaitingGames[requested_game_id]
+                OngoingGames[requested_game_id] = [other_player_id, split_msg[1]]
+                del WaitingGames[requested_game_id]
+                print(OngoingGames)
+                c.send("JOINED".encode())
 
-def join_game(player_id, game_id):
-    first_player_id = WaitingGames[game_id]
-    incoming_player = Users[player_id]
-    if first_player_id is not None and incoming_player is not None:
-        first_player = Users[first_player_id]
-        incoming_player.gameID = game_id
-        incoming_player.firstTurn = False
+                Users[other_player_id].send("JOINED".encode())
+            else:
+                c.send("FAIL".encode())
+            print("jointastic")
+            print()
+        elif "LIST" in client_msg:
+            print(client_msg)
+            c.send(json.dumps(WaitingGames).encode('utf-8', 'ignore'))
+            print()
 
-        # need to signal to each to player to make the grid
-        # will need the IP address to send just to the one that needs to do it
-        # first_player.makeGrid(AMOUNT)
-        # incoming_player.makeGrid(AMOUNT)
-        return True
-    return False
+        client_msg = ""
+
+        # lock.release()
+    c.close()
+
 
 # doesn't do anything right now except set up server
 s = socket.socket()
 host = socket.gethostname()
 port = 14123
 s.bind((host, port))
-s.listen(5)
+s.listen(10)
+print("Server is on!")
 while True:
     c, addr = s.accept()
-    print("Connection made with " + addr)
-    c.send("Connected")
-    c.close()
+    # lock.acquire()
+    print(c)
+    print("Connection made with ", end="")
+    print(addr)
+    start_new_thread(handle_client_thread, (c,))
+s.close()
 
