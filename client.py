@@ -12,6 +12,7 @@ request_player_id = "NEW"
 s.send(request_player_id.encode())
 rec = s.recv(1024)
 player_id = str(rec.decode('utf-8', 'ignore'))
+game_id = ""
 
 print("Connection established with server!")
 print("Your player ID is: " + player_id)
@@ -39,6 +40,15 @@ def print_waiting_games(string_of_dict):
             print("Game ID: " + game_id + " Player ID: " + dict_of_waiting_games[game_id])
 
 
+# start game once both players have joined
+def start_game(given_game_id):
+    hello_msg = "MSG " + player_id + " " + given_game_id + " Hello this is your opponent, " + player_id + " on game " + given_game_id
+    print("-sending-" + hello_msg)
+    s.send(hello_msg.encode())
+    hello_response = s.recv(1024).decode('utf-8', 'ignore')
+    print(hello_response)
+
+
 def act_on_choice(choice):
     if choice == "j":
         print()
@@ -51,7 +61,7 @@ def act_on_choice(choice):
         string_of_dict = s.recv(1024).decode('utf-8', 'ignore')
         print_waiting_games(string_of_dict)
 
-        print("Please enter in the game_id of the game you would like to join.")
+        print("Please enter in the Game ID of the game you would like to join.")
         print("If there are no games you would like to join, enter 'c' to create a new game: ", end="")
         act_on_choice(input())
     elif choice == "c":
@@ -62,9 +72,12 @@ def act_on_choice(choice):
         s.send(create_msg.encode())
         print("Game has been created. Please wait for another player to join...")
         create_start_response = s.recv(1024).decode('utf-8', 'ignore')
-        if create_start_response == "JOINED":
+        if "JOINED" in create_start_response:
             print("Successfully joined game!")
+            game_id = create_start_response.split()[1]
+            print(game_id)
             # open the gamegrid and send back and forth the coordinates of hits and misses
+            start_game(game_id)
     elif choice != "":
         print("Joining game...")
         # tell server to join a new game (send game_id and player_id)
@@ -72,9 +85,13 @@ def act_on_choice(choice):
         create_msg = "JOIN " + player_id + " " + choice
         s.send(create_msg.encode())
         join_response = s.recv(1024).decode('utf-8', 'ignore')
-        if join_response == "JOINED":
+        if "JOINED" in join_response:
             print("Successfully joined game!")
+            game_id = join_response.split()[1]
+            print(game_id)
+
             # open the gamegrid and send back and forth the coordinates of hits and misses
+            start_game(game_id)
         else:
             print("Could not join game. Please make sure to enter in the correct game ID (no quotes).")
             print()
