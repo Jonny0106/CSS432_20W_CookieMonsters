@@ -2,6 +2,7 @@ import pygame
 import battleship
 import player
 import enum
+import client
 
 # each player gets a board
 class BoardGame:
@@ -132,11 +133,13 @@ class BoardGame:
 
     # reads response message and updates board    
     def readRespMessege(self, response, isTop):
+        
         split = response.split(' ')
         is_hit_message = False
         cord = (split[1])[1:-1].split(",")
         row = int(cord[0])
         column = int(cord[1])
+        socClient.sendHit((row, column), 1)
         if isTop:
             if split[0] == "HIT":
                 PLAYER1.grid[row][column] = 2
@@ -245,8 +248,6 @@ class Mess_Type(enum.Enum):
     START = 4
     STARTGUESS = 5
 
-
-
 XOff = 1  # amount of tiles apart are the left and right grids
 YOff = 1  # amount of tiles apart are the top and bottom grids
 
@@ -261,7 +262,9 @@ square_size = 14
 MARGIN = 1
 AMOUNT = WINDOW_Y // (square_size + MARGIN)
 WINDOW_X = WINDOW_Y * 2 + 50
+
 while True:
+    socClient = client.Client()
     PLAYER1 = player.Player(1)
     PLAYER1.gameID = 1
     PLAYER1.firstTurn = True
@@ -288,4 +291,5 @@ while True:
     x = input("Want to play again:(y/n)")
     if x.capitalize() != "Y":
         print("OK have it your way. Bye...")
+        socClient.end()
         break
