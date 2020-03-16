@@ -78,74 +78,36 @@ class BoardGame:
 
     #reads the message passed through the socket(that will be passed)
     # at this moment no socket so all done localy
-    def readMessege(self, request, isTop):
+    def sendMessege(self, request):
         sendMessage = ""
-        # split = request.split(' ')
-        # is_hit_message = False
-        # if split[0] == "GUESS":
-        #     cord = (split[1])[1:-1].split(",")
-        #     row = int(cord[0])
-        #     column = int(cord[1])
-        #     if isTop:
-        #         if PLAYER2.hitsBoats(row, column):
-        #             PLAYER2.grid2[row][column] = 3
-        #             if len(PLAYER2.BoatDict) == 0:
-        #                 sendMessage = "END [" + str(1) + "," + str(0) + "] GM1\r\nEND"
-        #             else:
-        #                 sendMessage = "HIT [" + str(row) + "," + str(column) + "] "+ str(PLAYER2.gameID) + "\r\nEND"
-        #         else:
-        #             PLAYER2.grid2[row][column] = 2
-        #             sendMessage = "MISS [" + str(row) + "," + str(column) + "] GM1\r\nEND"
-        #         PLAYER2.changeTurn()      
-        #     else:
-        #         if PLAYER1.hitsBoats(row, column):
-        #             PLAYER1.grid2[row][column] = 3
-        #             if len(PLAYER1.BoatDict) == 0:
-        #                 sendMessage = "END [" + str(1) + "," + str(0) + "] GM1\r\nEND"
-        #             else:
-        #                 sendMessage = "HIT [" + str(row) + "," + str(column) + "] GM1\r\nEND"
-        #         else:
-        #             PLAYER1.grid2[row][column] = 2
-        #             sendMessage = "MISS [" + str(row) + "," + str(column) + "] GM1\r\nEND"
-        #         PLAYER1.changeTurn()
+        response = socClient.sendGuess(request)
         return sendMessage
 
     # reads response message and updates board    
-    def readRespMessege(self, response, isTop): 
+    def readRespMessege(self, response): 
         print("response") 
-        # split = response.split(' ')
-        # is_hit_message = False
-        # cord = (split[1])[1:-1].split(",")
-        # row = int(cord[0])
-        # column = int(cord[1])
-        # socClient.sendHit((row, column), 1)
-        # if isTop:
-        #     if split[0] == "HIT":
-        #         PLAYER1.grid[row][column] = 2
-        #     elif split[0] == "MISS":
-        #         PLAYER1.grid[row][column] = 1
-        #     elif split[0] == "END":
-        #         if row == 1:
-        #             PLAYER1.win = True
-        #             PLAYER1.grid = [[2 for i in range(self.AMOUNT)] for j in range(self.AMOUNT)] 
-        #             # when end the screen turns red
-        #         self.done = True
-        # else:
-        #     if split[0] == "HIT":
-        #         PLAYER2.grid[row][column] = 2
-        #     elif split[0] == "MISS":
-        #         PLAYER2.grid[row][column] = 1
-        #     elif split[0] == "END":
-        #         if row == 1:
-        #             PLAYER2.win = True
-        #             PLAYER2.grid = [[2 for i in range(self.AMOUNT)] for j in range(self.AMOUNT)]
-        #             # when end the screen turns red 
-        #         self.done = True
+        split = response.split(' ')
+        is_hit_message = False
+        cord = (split[1])[1:-1].split(",")
+        row = int(cord[0])
+        column = int(cord[1])
+        socClient.sendHit((row, column), 1)
+        
+        if split[0] == "HIT":
+            PLAYER1.grid[row][column] = 2
+        elif split[0] == "MISS":
+            PLAYER1.grid[row][column] = 1
+        elif split[0] == "END":
+            if row == 1:
+                PLAYER1.win = True
+                PLAYER1.grid = [[2 for i in range(self.AMOUNT)] for j in range(self.AMOUNT)] 
+                # when end the screen turns red
+            self.done = True
                 
     
     # request sent to server
     def makeRequestMssg(self, row, column):
-        return "GUESS [" + str(row) + "," + str(column) + "] GM1\r\nEND"
+        return  str(row) + "," + str(column)
 
     # draws the left grid (the one clicked on)
     def color_single_grid(self, Grid, row, column):
@@ -191,13 +153,10 @@ class BoardGame:
 
     def sendStartGame(self):
         PLAYER1.startGussing()
-        PLAYER1.startGussing()
+        response = socClient.startGuesing()
+        return response
+
         
-
-    # def sendStartGame2(self):
-    #     PLAYER1.startGussing()
-
-
 def main_LOOP(p1):
     timeOut = 0
     while not p1.done and timeOut < 2:
@@ -208,7 +167,7 @@ def main_LOOP(p1):
                 # send p1.message across
                 response = p1.readMessege(hitMessage[0], True)
                 # send p1.response
-                p1.readRespMessege(response, True)
+                p1.readRespMessege(response)
         else:
             timeOut += 1
         p1.game_Coloring()
@@ -219,8 +178,7 @@ class Mess_Type(enum.Enum):
     HIT = 1
     MISS = 2
     END = 3
-    START = 4
-    STARTGUESS = 5
+    STARTGUESS = 4
 
 XOff = 1  # amount of tiles apart are the left and right grids
 YOff = 1  # amount of tiles apart are the top and bottom grids
