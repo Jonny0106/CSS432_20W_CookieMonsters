@@ -118,6 +118,12 @@ class Client:
         # wait till player sends a guess
         # message = self.s.recv()
         # return message
+    def startGuesing(self, player):
+        print("start guesing")
+        # player is the player instance
+        # send starting message
+        # return recieveMessage()
 
+    
     def end(self):
         self.s.close()
