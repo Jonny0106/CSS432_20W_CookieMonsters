@@ -104,4 +104,74 @@ def act_on_choice(choice):
 
 ask_for_choice()
 
+<<<<<<< Updated upstream
 s.close()
+=======
+    def act_on_choice(self, choice):
+        if choice == "j":
+            print()
+            print("Here are a list of games you can join:")
+             # request dictionary of WaitingGames from server
+            create_msg = "LIST " + self.player_id
+            self.s.send(create_msg.encode())
+
+            # print out each game_id and player_id
+            string_of_dict = self.s.recv(1024).decode('utf-8', 'ignore')
+            self.print_waiting_games(string_of_dict)
+
+            print("Please enter in the Game ID of the game you would like to join.")
+            print("If there are no games you would like to join, enter 'c' to create a new game: ", end="")
+            self.act_on_choice(input())
+        elif choice == "c":
+            print()
+            print("Creating new game...")
+            # tell server to create a new game (send player_id)
+            create_msg = "CREATE " + self.player_id
+            self.s.send(create_msg.encode())
+            print("Game has been created. Please wait for another player to join...")
+            create_start_response = self.s.recv(1024).decode('utf-8', 'ignore')
+            if "JOINED" in create_start_response:
+                print("Successfully joined game!")
+                game_id = create_start_response.split()[1]
+                print(game_id)
+              # open the gamegrid and send back and forth the coordinates of hits and misses
+                self.start_game(game_id)
+        elif choice != "":
+            print("Joining game...")
+            # tell server to join a new game (send game_id and player_id)
+            # in this case, choice is the game_id
+            create_msg = "JOIN " + self.player_id + " " + choice
+            self.s.send(create_msg.encode())
+            join_response = self.s.recv(1024).decode('utf-8', 'ignore')
+            if "JOINED" in join_response:
+                print("Successfully joined game!")
+                game_id = join_response.split()[1]
+                print(game_id)
+
+                # open the gamegrid and send back and forth the coordinates of hits and misses
+                self.start_game(game_id)
+            else:
+                print("Could not join game. Please make sure to enter in the correct game ID (no quotes).")
+                print()
+                self.ask_for_choice()
+        else:
+            print()
+            print("You have not entered anything. Let's start over.")
+            self.ask_for_choice()
+
+    def sendGuess(self, message):
+        print("sending Guess")
+        # send hit out
+        # self.s.send()
+        # after then recieve the response
+        # return recieveMessage()
+
+    def recieveMessage(self):
+        print("recieving Meesage")
+        # wait till player sends a guess
+        # message = self.s.recv()
+        # return message
+
+    def end(self):
+        self.s.close()
+>>>>>>> Stashed changes

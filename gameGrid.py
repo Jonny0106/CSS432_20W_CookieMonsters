@@ -131,7 +131,11 @@ class BoardGame:
         return sendMessage
 
     # reads response message and updates board    
+<<<<<<< Updated upstream
     def readRespMessege(self, response, isTop):
+=======
+    def readRespMessege(self, response, isTop): 
+>>>>>>> Stashed changes
         split = response.split(' ')
         is_hit_message = False
         cord = (split[1])[1:-1].split(",")
@@ -209,7 +213,6 @@ class BoardGame:
 
     def sendStartGame(self):
         PLAYER1.startGussing()
-        PLAYER2.startGussing()
 
     def sendStartGame2(self):
         PLAYER1.startGussing()
@@ -266,12 +269,8 @@ while True:
     PLAYER1.gameID = 1
     PLAYER1.firstTurn = True
 
-    PLAYER2 = player.Player(2)
-    PLAYER2.gameID = 2
-    PLAYER2.firstTurn = False
 
     PLAYER1.make_grid(AMOUNT)  # creates grid for player1(top)
-    PLAYER2.make_grid(AMOUNT)  # creates grid for player2(bottom)
 
     p1 = BoardGame(WINDOW_X, WINDOW_Y * 2, square_size, MARGIN, AMOUNT)
     p1.make_window()
