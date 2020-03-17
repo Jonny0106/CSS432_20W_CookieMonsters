@@ -63,19 +63,24 @@ def handle_client_thread(c):
             c.send(json.dumps(WaitingGames).encode('utf-8', 'ignore'))
             print()
         else:
+            print("================")
             print(client_msg)
             split_msg = client_msg.split()
             sender_id = split_msg[1]
+            print("SENDER: " + sender_id)
             game = OngoingGames[split_msg[2]]
+            print("GAME: " + str(game))
             opponent_id = ""
             if game[0] == sender_id:
                 opponent_id = game[1]
             else:
                 opponent_id = game[0]
+            print("OPPONENT: " + opponent_id)
 
             Users[opponent_id].send(client_msg.encode())
             if "END" in client_msg:
                 Users[sender_id].send(client_msg.encode())
+
             print()
 
         client_msg = ""

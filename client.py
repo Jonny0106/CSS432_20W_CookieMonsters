@@ -6,9 +6,11 @@ class Client:
     def __init__(self):
         print("Welcome to Team Cookie Monsters' Battleship Game!")
         self.s = socket.socket()
-        self.host = "10.155.176.29"
+        # self.host = "10.155.176.29"
+        self.host = socket.gethostname()
         self.port = 6010
         self.s.connect((self.host, self.port))
+        self.goFirst = False
 
         # upon connecting to server, get the player_id
         self.request_player_id = "NEW"
@@ -70,13 +72,14 @@ class Client:
             create_msg = "CREATE " + self.player_id
             self.s.send(create_msg.encode())
             print("Game has been created. Please wait for another player to join...")
+            self.goFirst = True
             create_start_response = self.s.recv(1024).decode('utf-8', 'ignore')
             if "JOINED" in create_start_response:
                 print("Successfully joined game!")
-                game_id = create_start_response.split()[1]
-                print(game_id)
-                # open the gameGrid and send back and forth the coordinates of hits and misses
-                self.start_game(game_id)
+                self.game_id = create_start_response.split()[1]
+                print(self.game_id)
+                # open the gamegrid and send back and forth the coordinates of hits and misses
+                self.start_game(self.game_id)
         elif choice != "":
             print("Joining game...")
             # tell server to join a new game (send game_id and player_id)
@@ -86,11 +89,11 @@ class Client:
             join_response = self.s.recv(1024).decode('utf-8', 'ignore')
             if "JOINED" in join_response:
                 print("Successfully joined game!")
-                game_id = join_response.split()[1]
-                print(game_id)
+                self.game_id = join_response.split()[1]
+                print(self.game_id)
 
-                # open the gameGrid and send back and forth the coordinates of hits and misses
-                self.start_game(game_id)
+                # open the gamegrid and send back and forth the coordinates of hits and misses
+                self.start_game(self.game_id)
             else:
                 print("Could not join game. Please make sure to enter in the correct game ID (no quotes).")
                 print()
@@ -100,7 +103,7 @@ class Client:
             print("You have not entered anything. Let's start over.")
             self.ask_for_choice()
 
-    def sendGuess(self, message):
+    def sendMessage(self, message):
         print("sending Guess: " + message)
         # send message out
         self.s.send(message.encode())
@@ -108,9 +111,10 @@ class Client:
         return self.receiveMessage()
 
     def receiveMessage(self):
-        print("receiving Message")
+        print("recieving Meesage")
         # wait until opponent sends a guess
-        message = self.s.recv(1024)
+        message = self.s.recv(1024).decode('utf-8', 'ignore')
+        print("MESSAGE: " + message)
         return message
 
     def end(self):
