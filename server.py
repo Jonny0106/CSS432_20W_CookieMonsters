@@ -1,7 +1,6 @@
 # from gameGrid import BoardGame
 import uuid
 import socket
-import player
 from _thread import *
 import threading
 import time
@@ -63,7 +62,7 @@ def handle_client_thread(c):
             print(client_msg)
             c.send(json.dumps(WaitingGames).encode('utf-8', 'ignore'))
             print()
-        elif "MSG" in client_msg:
+        else:
             print(client_msg)
             split_msg = client_msg.split()
             sender_id = split_msg[1]
@@ -75,6 +74,8 @@ def handle_client_thread(c):
                 opponent_id = game[0]
 
             Users[opponent_id].send(client_msg.encode())
+            if "END" in client_msg:
+                Users[sender_id].send(client_msg.encode())
             print()
 
         client_msg = ""
@@ -84,7 +85,7 @@ def handle_client_thread(c):
 # doesn't do anything right now except set up server
 s = socket.socket()
 host = socket.gethostname()
-port = 14123
+port = 6010
 s.bind((host, port))
 s.listen(10)
 print("Server is on!")
