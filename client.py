@@ -104,20 +104,17 @@ class Client:
             self.ask_for_choice()
 
     def sendMessage(self, message):
-        print("sending Guess: " + message)
         # send message out
         self.s.send(message.encode())
         # after sending, wait for the response
         return self.receiveMessage()
 
     def sendMessageResponse(self, message):
-        print("response send")
+        
         self.s.send(message.encode())
     def receiveMessage(self):
-        print("recieving Meesage")
         # wait until opponent sends a guess
         message = self.s.recv(1024).decode('utf-8', 'ignore')
-        print("MESSAGE: " + message)
         return message
 
     def end(self):

@@ -47,7 +47,6 @@ class BoardGame:
                 if column < AMOUNT and row < AMOUNT and PLAYER1.isTurn:  # left
                     if PLAYER1.grid[row][column] == 0:
                         guessRequest = self.createGuessMsg(row, column)
-                        print(guessRequest)
                         PLAYER1.changeTurn()
 
                 elif column > AMOUNT and row < AMOUNT and PLAYER1.buildTime:  # right
@@ -85,8 +84,6 @@ class BoardGame:
 
     # reads response message and updates board
     def readRespMessage(self, response):
-        print("response")
-        print(response)
         split = response.split(' ')
 
         if split[0] == "GUESS":
@@ -105,7 +102,6 @@ class BoardGame:
             column = int(split[4])
             PLAYER1.grid[row][column] = 2
         elif split[0] == "MISS":
-            print("got to this line")
             row = int(split[3])
             column = int(split[4])
             PLAYER1.grid[row][column] = 1
@@ -205,12 +201,9 @@ def main_LOOP(p1):
             p1.game_Coloring()
             if hitMessage is not "":
                 response = p1.sendMessage(hitMessage)  # send p1.message across
-                print("response" + response)
                 p1.readRespMessage(response)  # send p1.response 
             elif (not PLAYER1.isTurn) and PLAYER1.tickerStart == 2:
-                print("resp ")
                 resp = socClient.receiveMessage()
-                print(resp)
                 p1.readRespMessage(resp) 
                 PLAYER1.changeTurn()
                
@@ -227,12 +220,15 @@ RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
-WINDOW_X = 400
-WINDOW_Y = 400
-square_size = 14
+WINDOW_X = 350
+WINDOW_Y = 350
+square_size = 24
 MARGIN = 1
 AMOUNT = WINDOW_Y // (square_size + MARGIN)
 WINDOW_X = WINDOW_Y * 2 + 50
+SIZE_OF_UNDER = 40
+TEXT_X = WINDOW_X + SIZE_OF_UNDER
+TEXT_Y = 10
 
 while True:
     socClient = client.Client()
@@ -242,7 +238,7 @@ while True:
 
     PLAYER1.make_grid(AMOUNT)  # creates grid for player1(top)
 
-    p1 = BoardGame(WINDOW_X, WINDOW_Y * 2, square_size, MARGIN, AMOUNT)
+    p1 = BoardGame(WINDOW_X, WINDOW_Y, square_size, MARGIN, AMOUNT)
     p1.make_window()
 
     main_LOOP(p1)
