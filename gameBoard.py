@@ -80,9 +80,8 @@ class BoardGame:
     # reads the message passed through the socket (that will be passed)
     # at this moment no socket so all done locally
     def sendMessage(self, request):
-        sendMessage = ""
         response = socClient.sendMessage(request)
-        return sendMessage
+        return response
 
     # reads response message and updates board
     def readRespMessage(self, response):
@@ -95,15 +94,16 @@ class BoardGame:
             column = int(split[4])
             # If hit, create HIT message
             if PLAYER1.hitsBoats(row, column):
-                socClient.sendMessage(self.createHitMsg(row, column))
+                socClient.sendMessageResponse(self.createHitMsg(row, column))
             # Else create MISS message
             else:
-                socClient.sendMessage(self.createMissMsg(row, column))
+                socClient.sendMessageResponse(self.createMissMsg(row, column))
         elif split[0] == "HIT":
             row = int(split[3])
             column = int(split[4])
             PLAYER1.grid[row][column] = 2
         elif split[0] == "MISS":
+            print("got to this line")
             row = int(split[3])
             column = int(split[4])
             PLAYER1.grid[row][column] = 1
@@ -179,6 +179,7 @@ class BoardGame:
 
     # this makes makes the game go from setting up to actually guessing
     def sendStartGame(self):
+        
         PLAYER1.startGuessing()  # player is ready
         readyMsg = self.createReadyMsg()  # creates ready message
         response = socClient.sendMessage(readyMsg)  # sends ready message to other player
@@ -197,22 +198,23 @@ def main_LOOP(p1):
     timeOut = 0
     while not p1.done and timeOut < 2:
         if not p1.done:
+
             hitMessage = p1.game_Event()
             p1.game_Coloring()
             if hitMessage is not "":
                 response = p1.sendMessage(hitMessage)  # send p1.message across
                 print("response" + response)
                 p1.readRespMessage(response)  # send p1.response 
-            
-            elif not PLAYER1.isTurn and PLAYER1.tickerStart == 2:
+            elif (not PLAYER1.isTurn) and PLAYER1.tickerStart == 2:
+                print("resp ")
                 resp = socClient.receiveMessage()
-                print("resp " + resp)
+                print(resp)
                 p1.readRespMessage(resp) 
                 PLAYER1.changeTurn()
                
         else:
             timeOut += 1
-            p1.game_Coloring()
+        p1.game_Coloring()
 
 
 XOff = 1  # amount of tiles apart are the left and right grids

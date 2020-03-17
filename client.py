@@ -110,6 +110,9 @@ class Client:
         # after sending, wait for the response
         return self.receiveMessage()
 
+    def sendMessageResponse(self, message):
+        print("response send")
+        self.s.send(message.encode())
     def receiveMessage(self):
         print("recieving Meesage")
         # wait until opponent sends a guess
