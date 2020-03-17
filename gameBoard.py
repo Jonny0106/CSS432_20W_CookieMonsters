@@ -113,23 +113,23 @@ class BoardGame:
 
     def createGuessMsg(self, row, column):
         # format: GUESS player_id game_id row, column
-        return msgType.GUESS + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + ", " + str(column)
+        return "GUESS" + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + ", " + str(column)
 
     def createHitMsg(self, row, column):
         # format: HIT player_id game_id row, column
-        return msgType.HIT + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + ", " + str(column)
+        return "HIT" + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + ", " + str(column)
 
     def createMissMsg(self, row, column):
         # format: MISS player_id game_id row, column
-        return msgType.MISS + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + ", " + str(column)
+        return "MISS" + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + ", " + str(column)
 
     def createReadyMsg(self):
         # format: READY player_id game_id
-        return msgType.READY + str(PLAYER1.playerID) + " " + str(socClient.game_id)
+        return "READY" + str(PLAYER1.playerID) + " " + str(socClient.game_id)
 
     def createEndMsg(self, message):
         # format: END player_id game_id message
-        return msgType.END + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + message
+        return "END" + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + message
 
     # draws the left grid (the one clicked on)
     def color_single_grid(self, Grid, row, column):
@@ -197,14 +197,6 @@ def main_LOOP(p1):
         else:
             timeOut += 1
         p1.game_Coloring()
-
-# enumeration of message types
-class msgType(enum.Enum):
-    GUESS = 0
-    HIT = 1
-    MISS = 2
-    END = 3
-    READY = 4
 
 XOff = 1  # amount of tiles apart are the left and right grids
 YOff = 1  # amount of tiles apart are the top and bottom grids
