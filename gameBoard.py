@@ -91,20 +91,20 @@ class BoardGame:
         row = int(cord[0])
         column = int(cord[1])
 
-        if split[0] == str(msgType.GUESS):
+        if split[0] == "GUESS":
             # If hit, create HIT message
             if PLAYER1.hitsBoats(row, column):
                 socClient.sendGuess(self.createHitMsg(row, column))
             # Else create MISS message
             else:
                 socClient.sendGuess(self.createMissMsg(row, column))
-        elif split[0] == str(msgType.HIT):
+        elif split[0] == "HIT":
             PLAYER1.grid[row][column] = 2
-        elif split[0] == str(msgType.MISS):
+        elif split[0] == "MISS":
             PLAYER1.grid[row][column] = 1
-        elif split[0] == str(msgType.READY):
+        elif split[0] == "READY":
             PLAYER1.startGuessing()
-        elif split[0] == str(msgType.END):
+        elif split[0] == "END":
             if row == 1:
                 PLAYER1.win = True
                 PLAYER1.grid = [[2 for i in range(self.AMOUNT)] for j in range(self.AMOUNT)] 
