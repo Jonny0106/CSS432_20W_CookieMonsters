@@ -75,7 +75,7 @@ class Client:
                 print("Successfully joined game!")
                 game_id = create_start_response.split()[1]
                 print(game_id)
-                # open the gamegrid and send back and forth the coordinates of hits and misses
+                # open the gameGrid and send back and forth the coordinates of hits and misses
                 self.start_game(game_id)
         elif choice != "":
             print("Joining game...")
@@ -89,7 +89,7 @@ class Client:
                 game_id = join_response.split()[1]
                 print(game_id)
 
-                # open the gamegrid and send back and forth the coordinates of hits and misses
+                # open the gameGrid and send back and forth the coordinates of hits and misses
                 self.start_game(game_id)
             else:
                 print("Could not join game. Please make sure to enter in the correct game ID (no quotes).")
@@ -108,7 +108,7 @@ class Client:
         return self.receiveMessage()
 
     def receiveMessage(self):
-        print("receiving Meesage")
+        print("receiving Message")
         # wait until opponent sends a guess
         message = self.s.recv(1024)
         return message

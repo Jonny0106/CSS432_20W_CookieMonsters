@@ -113,23 +113,23 @@ class BoardGame:
 
     def createGuessMsg(self, row, column):
         # format: GUESS player_id game_id row, column
-        return str(msgType.GUESS) + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + ", " + str(column)
+        return msgType.GUESS + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + ", " + str(column)
 
     def createHitMsg(self, row, column):
         # format: HIT player_id game_id row, column
-        return str(msgType.HIT) + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + ", " + str(column)
+        return msgType.HIT + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + ", " + str(column)
 
     def createMissMsg(self, row, column):
         # format: MISS player_id game_id row, column
-        return str(msgType.MISS) + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + ", " + str(column)
+        return msgType.MISS + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + ", " + str(column)
 
     def createReadyMsg(self):
         # format: READY player_id game_id
-        return str(msgType.READY) + str(PLAYER1.playerID) + " " + str(socClient.game_id)
+        return msgType.READY + str(PLAYER1.playerID) + " " + str(socClient.game_id)
 
     def createEndMsg(self, message):
         # format: END player_id game_id message
-        return str(msgType.END) + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + message
+        return msgType.END + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + message
 
     # draws the left grid (the one clicked on)
     def color_single_grid(self, Grid, row, column):
