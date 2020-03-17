@@ -3,16 +3,16 @@ import battleship
 
 class Player:
 
-    # player is initialiezed by the server
+    # player is initialized by the server
     def __init__(self, playerID):
         self.gameID = "0-0"
-        # users game id recieved from server
+        # users game id received from server
         self.playerID = playerID
         # users own player ID
         self.isTurn = False
         # who will go
         self.BoatDict = {}
-        # ships in a dict easy acces
+        # ships in a dict easy access
         self.firstTurn = False
         # who goes first
         self.buildTime = True
@@ -46,7 +46,7 @@ class Player:
         # one from being ready and one for the opponent being readdy
 
     def creatingBoat(self, row, column):
-        if(len(self.chosenBuild) == 0):
+        if len(self.chosenBuild) == 0:
             if self.grid2[row][column] != 0:
                 return
             self.chosenBuild.append((row, column))
@@ -80,7 +80,7 @@ class Player:
                 return False
             
             newRow = firstsq[0] + direction
-            isblank =  (self.grid2[newRow][column] == 0)         
+            isblank = (self.grid2[newRow][column] == 0)
             # finally add to grid
             while True:
                 # if the grid square is 0 then no ship
@@ -97,7 +97,6 @@ class Player:
                     newRow -= direction
                     self.grid2[newRow][column] = 0
 
-           
         # second click creates a horizontal boat  
         elif row == firstsq[0] and column != firstsq[1]:
             # changes direction if second click is to the left
@@ -129,7 +128,7 @@ class Player:
             return False
         # send out to be added to dict and initialized
         if direction == -1:
-            self.addBoat((firstsq[0], firstsq[1]), ( newRow, newCol), locationList) 
+            self.addBoat((firstsq[0], firstsq[1]), (newRow, newCol), locationList)
         else:
             self.addBoat((newRow, newCol), (firstsq[0], firstsq[1]), locationList)  
         return True
@@ -144,8 +143,7 @@ class Player:
         self.BoatDict[size] = battleship.Battleship(size, start, end, locationList)
         self.boatBuildingNum += 1
 
-
-    # colision check
+    # collision check
     def hitsBoats(self, row, column):
         
         for boat in self.BoatDict.keys():
@@ -155,9 +153,8 @@ class Player:
                 if row == square[0] and column == square[1]:
                     if self.BoatDict[boat].hit(i) and self.BoatDict[boat].isSunk():
                         self.BoatDict.pop(boat)
-                        #pops boat if sunk
+                        # pops boat if sunk
                     
                     return True
         
         return False
-            
