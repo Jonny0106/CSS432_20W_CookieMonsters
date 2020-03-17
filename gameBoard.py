@@ -14,9 +14,9 @@ class BoardGame:
         self.margin = margin
         self.AMOUNT = AMOUNT
         self.WINDOW_Y = WINDOW_Y
-        font = pygame.font.Font('freesansbold.ttf', 32) 
-        text = font.render('GeeksForGeeks', True, green, blue) 
-        textRect = text.get_rect()  
+        # font = pygame.font.Font('freesansbold.ttf', 32) 
+        # text = font.render('GeeksForGeeks', True, green, blue) 
+        # textRect = text.get_rect()  
   
         # set the center of the rectangular object. 
         textRect.center = (X // 2, Y // 2) 
