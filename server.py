@@ -25,14 +25,20 @@ WaitingGames = {}
 def handle_client_thread(c):
     while True:
         client_msg = c.recv(1024).decode('utf-8', 'ignore')
-        if client_msg == "NEW":
+        if "NEW" in client_msg:
             print(client_msg)
-            new_player = uuid.uuid1()
-            new_player = str(new_player)
-            print("New player: " + new_player)
-            c.send(new_player.encode())
-            Users[new_player] = c
-            print()
+            split_new = client_msg.split()
+            req_name = split_new[1]
+
+            if req_name in Users:
+                c.send("FAILED".encode())
+            else:
+                new_player = split_new[1]
+                confirm_msg = "CONFIRMED " + new_player
+                print("New player: " + new_player)
+                c.send(confirm_msg.encode())
+                Users[new_player] = c
+                print()
         elif "CREATE" in client_msg:
             print(client_msg)
             new_game_id = str(uuid.uuid1())
@@ -80,7 +86,9 @@ def handle_client_thread(c):
             Users[opponent_id].send(client_msg.encode())
             if "END" in client_msg:
                 Users[sender_id].send(client_msg.encode())
-
+                del Users[sender_id]
+                del Users[opponent_id]
+                del OngoingGames[split_msg[2]]
             print()
 
         client_msg = ""
