@@ -23,7 +23,7 @@ class BoardGame:
         self.done = False
 
     def game_Event(self):
-        hitRequest = ""  # hit request for player1
+        guessRequest = ""  # guess request for player1
         # for loop  records the mouse clicks
         for event in pygame.event.get():  # User did something
             if event.type == pygame.QUIT:  # If user clicked close
@@ -38,15 +38,15 @@ class BoardGame:
                 # this wil also have a check so there is no switching
 
                 # this sees where the hit is either left or right, bottom or top
-                # this is where either hits are rjected or not
+                # this is where either hits are rejected or not
 
                 # next lines check what grid was clicked. Amount is the length in row and column direction
 
                 # top grids
                 if column < AMOUNT and row < AMOUNT and PLAYER1.isTurn:  # left
                     if PLAYER1.grid[row][column] == 0:
-                        hitRequest = self.makeRequestMssg(row, column)
-                        print(hitRequest)
+                        guessRequest = self.createGuessMsg(row, column)
+                        print(guessRequest)
                         PLAYER1.changeTurn()
 
                 elif column > AMOUNT and row < AMOUNT and PLAYER1.buildTime:  # right
@@ -56,7 +56,7 @@ class BoardGame:
                         PLAYER1.creatingBoat(row, column)
                         if not PLAYER1.buildTime:
                             self.sendStartGame()
-        return hitRequest
+        return guessRequest
     
     def game_Coloring(self):
         # Set the screen background
@@ -76,38 +76,60 @@ class BoardGame:
         self.clock.tick(60)
         pygame.display.flip()
 
-    #reads the message passed through the socket(that will be passed)
-    # at this moment no socket so all done localy
-    def sendMessege(self, request):
+    # reads the message passed through the socket (that will be passed)
+    # at this moment no socket so all done locally
+    def sendMessage(self, request):
         sendMessage = ""
         response = socClient.sendGuess(request)
         return sendMessage
 
     # reads response message and updates board    
-    def readRespMessege(self, response): 
+    def readRespMessage(self, response):
         print("response") 
         split = response.split(' ')
-        is_hit_message = False
         cord = (split[1])[1:-1].split(",")
         row = int(cord[0])
         column = int(cord[1])
-        socClient.sendHit((row, column), 1)
-        
-        if split[0] == "HIT":
+
+        if split[0] == str(msgType.GUESS):
+            # If hit, create HIT message
+            if PLAYER1.hitsBoats(row, column):
+                socClient.sendGuess(self.createHitMsg(row, column))
+            # Else create MISS message
+            else:
+                socClient.sendGuess(self.createMissMsg(row, column))
+        elif split[0] == str(msgType.HIT):
             PLAYER1.grid[row][column] = 2
-        elif split[0] == "MISS":
+        elif split[0] == str(msgType.MISS):
             PLAYER1.grid[row][column] = 1
-        elif split[0] == "END":
+        elif split[0] == str(msgType.READY):
+            PLAYER1.startGuessing()
+        elif split[0] == str(msgType.END):
             if row == 1:
                 PLAYER1.win = True
                 PLAYER1.grid = [[2 for i in range(self.AMOUNT)] for j in range(self.AMOUNT)] 
                 # when end the screen turns red
             self.done = True
-                
-    
-    # request sent to server
-    def makeRequestMssg(self, row, column):
-        return  str(row) + "," + str(column)
+
+    def createGuessMsg(self, row, column):
+        # format: GUESS player_id game_id row, column
+        return str(msgType.GUESS) + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + ", " + str(column)
+
+    def createHitMsg(self, row, column):
+        # format: HIT player_id game_id row, column
+        return str(msgType.HIT) + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + ", " + str(column)
+
+    def createMissMsg(self, row, column):
+        # format: MISS player_id game_id row, column
+        return str(msgType.MISS) + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + ", " + str(column)
+
+    def createReadyMsg(self):
+        # format: READY player_id game_id
+        return str(msgType.READY) + str(PLAYER1.playerID) + " " + str(socClient.game_id)
+
+    def createEndMsg(self, message):
+        # format: END player_id game_id message
+        return str(msgType.END) + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + message
 
     # draws the left grid (the one clicked on)
     def color_single_grid(self, Grid, row, column):
@@ -128,7 +150,7 @@ class BoardGame:
                           self.square_size,
                           self.square_size])
 
-    #draws the one that shows hits right side
+    # draws the one that shows hits right side
     def color_2nd(self, Grid, row, column):
         color = BLUE
         if Grid[row][column] == 1:
@@ -150,19 +172,19 @@ class BoardGame:
                           self.square_size,
                           self.square_size])
 
-    # this makes makes the game go from setting up to acually guessing
+    # this makes makes the game go from setting up to actually guessing
     def sendStartGame(self):
-        PLAYER1.startGussing()                      # player is ready
-        ready = self.createReadyMssg()              # creates ready message
-        response = socClient.sendMessage(ready)     # sends ready messege to other player
-        self.readRespMessege(response)              # make sure it is a ready/ could be an end message
+        PLAYER1.startGuessing()                         # player is ready
+        readyMsg = self.createReadyMsg()                # creates ready message
+        response = socClient.sendMessage(readyMsg)      # sends ready message to other player
+        self.readRespMessage(response)                  # make sure it is a ready/ could be an end message
                                      
     def endGameBoard(self):
-        endMssg = self.makeEndMssg()                # create end messege
+        endMsg = self.createEndMsg("Loss")              # create end message
         while not self.done:                            # makes sure that server is on track with exit
-            response = socClient.sendMessage(endMssg)   # send endmessage
-            self.readRespMessege(response)              # make sure it is a ready/ could be an end message
-            # self.done = True    will be called in readMessege      # Flag that we are done so we exit this loop 
+            response = socClient.sendMessage(endMsg)    # send end message
+            self.readRespMessage(response)              # make sure it is a ready/ could be an end message
+            # self.done = True    will be called in readMessage      # Flag that we are done so we exit this loop 
         
 def main_LOOP(p1):
     timeOut = 0
@@ -170,14 +192,14 @@ def main_LOOP(p1):
         if not p1.done:
             hitMessage = p1.game_Event()
             if hitMessage is not "":
-                response = p1.sendMessege(hitMessage) # send p1.message across
-                p1.readRespMessege(response)          # send p1.response
+                response = p1.sendMessage(hitMessage) # send p1.message across
+                p1.readRespMessage(response)          # send p1.response
         else:
             timeOut += 1
         p1.game_Coloring()
 
-#enumeration of message types
-class Mess_Type(enum.Enum):
+# enumeration of message types
+class msgType(enum.Enum):
     GUESS = 0
     HIT = 1
     MISS = 2
@@ -214,7 +236,7 @@ while True:
 
     main_LOOP(p1)
     pygame.quit()
-    # only player1's staus is brodcasted
+    # only player1's status is broadcasted
     if PLAYER1.win == True:
         print("you won!")
     else:

@@ -38,7 +38,7 @@ class Player:
     def changeTurn(self):
         self.isTurn = not self.isTurn
 
-    def startGussing(self):
+    def startGuessing(self):
         self.tickerStart += 1
         if self.tickerStart == 2:
             self.isTurn = self.firstTurn
@@ -62,7 +62,7 @@ class Player:
         locationList = []
         isblank = False
         firstsq = self.chosenBuild[0]
-        # where the firt click was set
+        # where the first click was set
         newRow = firstsq[0]
         # newRow will be the last row block
         newCol = firstsq[1]
@@ -70,20 +70,20 @@ class Player:
         # where the last column will be 
         direction = 1
         # what direction with the blocks go relative to first block
-        # bottom if statment checks if the second click create a vertical boat 
+        # bottom if statement checks if the second click create a vertical boat
         if row != firstsq[0] and column == firstsq[1]:
             if row - firstsq[0] < 1:        # changes direction if new click is above
                 direction = -1
-            maxRow = firstsq[0] + (self.boatBuildingNum * direction)    #location of furthest block
+            maxRow = firstsq[0] + (self.boatBuildingNum * direction)    # location of furthest block
             
-            if maxRow > self.AMOUNT or maxRow < -1:         #check if in bound of grid
+            if maxRow > self.AMOUNT or maxRow < -1:         # check if in bound of grid
                 return False
             
             newRow = firstsq[0] + direction
             isblank =  (self.grid2[newRow][column] == 0)         
             # finally add to grid
             while True:
-                # if the grid squeare is 0 then no ship 
+                # if the grid square is 0 then no ship
                 if isblank:
                     self.grid2[newRow][column] = 1
                     locationList.append((newRow, column))
@@ -104,13 +104,13 @@ class Player:
             if column - firstsq[1]  < 1:
                 direction = -1
 
-            # furthes block loaction
+            # furthest block location
             maxCol = firstsq[1] + (self.boatBuildingNum * direction)
-            if maxCol > self.AMOUNT or maxCol < -1:     #check if out of bound
+            if maxCol > self.AMOUNT or maxCol < -1:     # check if out of bound
                 return False
             newCol = firstsq[1] + direction
             isblank = (self.grid2[row][newCol] == 0)
-            # finally add t grid
+            # finally add to grid
             while True:
                 if isblank:
                     self.grid2[row][newCol] = 1
@@ -127,20 +127,20 @@ class Player:
                 
         if not isblank:
             return False
-        #send out to bee added to dict and initialized
+        # send out to be added to dict and initialized
         if direction == -1:
             self.addBoat((firstsq[0], firstsq[1]), ( newRow, newCol), locationList) 
         else:
             self.addBoat((newRow, newCol), (firstsq[0], firstsq[1]), locationList)  
         return True
 
-    #adds boat by first checking size then adding to to dict
+    # adds boat by first checking size then adding to to dict
     def addBoat(self, start, end, locationList):
         size = start[0] - end[0]
-        #row offset how long
+        # row offset how long
         if size == 0:
             size = start[1] - end[1]
-            #column offset how tall
+            # column offset how tall
         self.BoatDict[size] = battleship.Battleship(size, start, end, locationList)
         self.boatBuildingNum += 1
 
