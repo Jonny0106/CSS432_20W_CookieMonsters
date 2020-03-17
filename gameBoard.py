@@ -94,9 +94,11 @@ class BoardGame:
             column = int(split[4])
             # If hit, create HIT message
             if PLAYER1.hitsBoats(row, column):
+                PLAYER1.grid2[row][column] = 3
                 socClient.sendMessageResponse(self.createHitMsg(row, column))
             # Else create MISS message
             else:
+                PLAYER1.grid2[row][column] = 2
                 socClient.sendMessageResponse(self.createMissMsg(row, column))
         elif split[0] == "HIT":
             row = int(split[3])
