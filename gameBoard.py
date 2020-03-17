@@ -87,12 +87,12 @@ class BoardGame:
     # reads response message and updates board
     def readRespMessage(self, response):
         print("response")
+        print(response)
         split = response.split(' ')
 
         if split[0] == "GUESS":
-            cord = (split[1])[1:-1].split(",")
-            row = int(cord[0])
-            column = int(cord[1])
+            row = int(split[3])
+            column = int(split[4])
             # If hit, create HIT message
             if PLAYER1.hitsBoats(row, column):
                 socClient.sendMessage(self.createHitMsg(row, column))
@@ -100,14 +100,12 @@ class BoardGame:
             else:
                 socClient.sendMessage(self.createMissMsg(row, column))
         elif split[0] == "HIT":
-            cord = (split[1])[1:-1].split(",")
-            row = int(cord[0])
-            column = int(cord[1])
+            row = int(split[3])
+            column = int(split[4])
             PLAYER1.grid[row][column] = 2
         elif split[0] == "MISS":
-            cord = (split[1])[1:-1].split(",")
-            row = int(cord[0])
-            column = int(cord[1])
+            row = int(split[3])
+            column = int(split[4])
             PLAYER1.grid[row][column] = 1
         elif split[0] == "READY":
             PLAYER1.startGuessing()
@@ -120,15 +118,15 @@ class BoardGame:
 
     def createGuessMsg(self, row, column):
         # format: GUESS player_id game_id row, column
-        return "GUESS" + " " + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + ", " + str(column)
+        return "GUESS" + " " + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + " " + str(column)
 
     def createHitMsg(self, row, column):
         # format: HIT player_id game_id row, column
-        return "HIT" + " " + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + ", " + str(column)
+        return "HIT" + " " + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + " " + str(column)
 
     def createMissMsg(self, row, column):
         # format: MISS player_id game_id row, column
-        return "MISS" + " " + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + ", " + str(column)
+        return "MISS" + " " + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + " " + str(column)
 
     def createReadyMsg(self):
         # format: READY player_id game_id
@@ -185,6 +183,7 @@ class BoardGame:
         readyMsg = self.createReadyMsg()  # creates ready message
         response = socClient.sendMessage(readyMsg)  # sends ready message to other player
         self.readRespMessage(response)  # make sure it is a ready/ could be an end message
+    
 
     def endGameBoard(self):
         endMsg = self.createEndMsg("Loss")  # create end message
@@ -199,12 +198,21 @@ def main_LOOP(p1):
     while not p1.done and timeOut < 2:
         if not p1.done:
             hitMessage = p1.game_Event()
+            p1.game_Coloring()
             if hitMessage is not "":
                 response = p1.sendMessage(hitMessage)  # send p1.message across
-                p1.readRespMessage(response)  # send p1.response
+                print("response" + response)
+                p1.readRespMessage(response)  # send p1.response 
+            
+            elif not PLAYER1.isTurn and PLAYER1.tickerStart == 2:
+                resp = socClient.receiveMessage()
+                print("resp " + resp)
+                p1.readRespMessage(resp) 
+                PLAYER1.changeTurn()
+               
         else:
             timeOut += 1
-        p1.game_Coloring()
+            p1.game_Coloring()
 
 
 XOff = 1  # amount of tiles apart are the left and right grids
