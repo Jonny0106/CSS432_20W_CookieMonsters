@@ -13,14 +13,38 @@ class Client:
         self.goFirst = False
 
         # upon connecting to server, get the player_id
-        self.request_player_id = "NEW"
-        self.s.send(self.request_player_id.encode())
-        self.rec = self.s.recv(1024)
-        self.player_id = str(self.rec.decode('utf-8', 'ignore'))
+        first_ask = True
+        rec = ""
+        while "CONFIRMED" not in rec:
+            if not first_ask:
+                print("That name looks to be taken already. Please try another name.")
+            request_player_id = "NEW " + self.ask_for_name()
+            self.s.send(request_player_id.encode())
+            rec = str(self.s.recv(1024).decode('utf-8', 'ignore'))
+            first_ask = False
+        self.player_id = rec.split()[1]
         self.game_id = ""
         print("Connection established with server!")
         print("Your player ID is: " + self.player_id)
         self.ask_for_choice()
+
+    def ask_for_name(self):
+        print("Enter your name: ", end="")
+        req_name = input()
+        while req_name == "":
+            print("Invalid name. Please enter your name: ", end="")
+            req_name = input()
+        return self.change_spaces_to_underscores(req_name)
+
+    def change_spaces_to_underscores(self, name):
+        split_name = name.split()
+        ret_str = ""
+        if len(split_name) == 1:
+            return name
+        else:
+            for x in split_name:
+                ret_str += x + "_"
+        return ret_str[:-1]
 
     def ask_for_choice(self):
         print("Please enter a 'j' to list all of the possible games to join or a 'c' to create a new game: ", end="")
