@@ -27,7 +27,7 @@ class BoardGame:
         # for loop  records the mouse clicks
         for event in pygame.event.get():  # User did something
             if event.type == pygame.QUIT:  # If user clicked close
-                self.done = True  # Flag that we are done so we exit this loop 
+                self.endGameBoard()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 # User clicks the mouse. Get the position
                 pos = pygame.mouse.get_pos()
@@ -56,7 +56,7 @@ class BoardGame:
                         PLAYER1.creatingBoat(row, column)
                         if not PLAYER1.buildTime:
                             self.sendStartGame()
-        return hitRequest, ""
+        return hitRequest
     
     def game_Coloring(self):
         # Set the screen background
@@ -150,24 +150,28 @@ class BoardGame:
                           self.square_size,
                           self.square_size])
 
-
+    # this makes makes the game go from setting up to acually guessing
     def sendStartGame(self):
-        PLAYER1.startGussing()
-        response = socClient.startGuesing()
-        return response
-
+        PLAYER1.startGussing()                      # player is ready
+        ready = self.createReadyMssg()              # creates ready message
+        response = socClient.sendMessage(ready)     # sends ready messege to other player
+        self.readRespMessege(response)              # make sure it is a ready/ could be an end message
+                                     
+    def endGameBoard(self):
+        endMssg = self.makeEndMssg()                # create end messege
+        while not self.done:                            # makes sure that server is on track with exit
+            response = socClient.sendMessage(endMssg)   # send endmessage
+            self.readRespMessege(response)              # make sure it is a ready/ could be an end message
+            # self.done = True    will be called in readMessege      # Flag that we are done so we exit this loop 
         
 def main_LOOP(p1):
     timeOut = 0
     while not p1.done and timeOut < 2:
         if not p1.done:
             hitMessage = p1.game_Event()
-            if hitMessage[0] is not "":
-
-                # send p1.message across
-                response = p1.readMessege(hitMessage[0], True)
-                # send p1.response
-                p1.readRespMessege(response)
+            if hitMessage is not "":
+                response = p1.sendMessege(hitMessage) # send p1.message across
+                p1.readRespMessege(response)          # send p1.response
         else:
             timeOut += 1
         p1.game_Coloring()
@@ -178,7 +182,7 @@ class Mess_Type(enum.Enum):
     HIT = 1
     MISS = 2
     END = 3
-    STARTGUESS = 4
+    READY = 4
 
 XOff = 1  # amount of tiles apart are the left and right grids
 YOff = 1  # amount of tiles apart are the top and bottom grids
@@ -219,6 +223,6 @@ while True:
     # do thy want to play again
     x = input("Want to play again:(y/n)")
     if x.capitalize() != "Y":
-        print("OK have it your way. Bye...")
+        print("Byyyeeeee")
         socClient.end()
         break
