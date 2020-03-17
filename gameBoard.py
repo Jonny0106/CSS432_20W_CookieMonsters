@@ -14,6 +14,12 @@ class BoardGame:
         self.margin = margin
         self.AMOUNT = AMOUNT
         self.WINDOW_Y = WINDOW_Y
+        font = pygame.font.Font('freesansbold.ttf', 32) 
+        text = font.render('GeeksForGeeks', True, green, blue) 
+        textRect = text.get_rect()  
+  
+        # set the center of the rectangular object. 
+        textRect.center = (X // 2, Y // 2) 
 
     def make_window(self):
         self.WINDOW_SIZE = [self.WINDOW_X, self.WINDOW_Y + 20]
@@ -92,7 +98,10 @@ class BoardGame:
             # If hit, create HIT message
             if PLAYER1.hitsBoats(row, column):
                 PLAYER1.grid2[row][column] = 3
-                socClient.sendMessageResponse(self.createHitMsg(row, column))
+                if len(PLAYER1.BoatDict) == 0:
+                    self.endGameBoard()    
+                else:
+                    socClient.sendMessageResponse(self.createHitMsg(row, column))
             # Else create MISS message
             else:
                 PLAYER1.grid2[row][column] = 2
@@ -226,9 +235,10 @@ square_size = 24
 MARGIN = 1
 AMOUNT = WINDOW_Y // (square_size + MARGIN)
 WINDOW_X = WINDOW_Y * 2 + 50
-SIZE_OF_UNDER = 40
-TEXT_X = WINDOW_X + SIZE_OF_UNDER
-TEXT_Y = 10
+SIZE_OF_UNDER = 100 
+TEXT_X = 10
+WINDOW_Y = WINDOW_Y + SIZE_OF_UNDER
+TEXT_Y = WINDOW_Y - SIZE_OF_UNDER
 
 while True:
     socClient = client.Client()

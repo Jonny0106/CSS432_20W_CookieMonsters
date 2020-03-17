@@ -134,8 +134,8 @@ class Client:
         return self.receiveMessage()
 
     def sendMessageResponse(self, message):
-        
         self.s.send(message.encode())
+        
     def receiveMessage(self):
         # wait until opponent sends a guess
         message = self.s.recv(1024).decode('utf-8', 'ignore')
