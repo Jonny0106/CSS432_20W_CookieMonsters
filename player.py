@@ -8,7 +8,7 @@ class Player:
         self.gameID = "0-0"
         # users game id received from server
         self.playerID = playerID
-        # users own player ID
+        # users own player Ibuildtimennnnnnn
         self.isTurn = False
         # who will go
         self.BoatDict = {}
@@ -18,7 +18,7 @@ class Player:
         self.buildTime = True
         self.boatBuildingNum = 2
         self.chosenBuild = []
-        self.maxBoatSize = 7
+        self.maxBoatSize = 3
         self.tickerStart = 0
         self.win = False
 

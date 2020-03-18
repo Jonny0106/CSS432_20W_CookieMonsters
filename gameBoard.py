@@ -25,9 +25,19 @@ class BoardGame:
         self.WINDOW_SIZE = [self.WINDOW_X, self.WINDOW_Y + 20]
         pygame.init()
         self.screen = pygame.display.set_mode(self.WINDOW_SIZE)
-        pygame.display.set_caption("Array Backed Grid")
+        pygame.display.set_caption(socClient.player_id + " game")
         self.clock = pygame.time.Clock()
         self.done = False
+        self.textChange("Set your ships")
+
+    def textChange(self, textStr):
+        self.dispayText = textStr
+        self.font = pygame.font.Font(pygame.font.get_default_font(), 20)
+        self.text = self.font.render(self.dispayText, True, BLACK, BLUE)
+        self.textRect = self.text.get_rect()
+        self.textRect.left = TEXT_X
+        self.textRect.top = TEXT_Y
+
 
     def game_Event(self, updates=False):
         guessRequest = ""  # guess request for player1
@@ -54,6 +64,7 @@ class BoardGame:
                     if PLAYER1.grid[row][column] == 0:
                         guessRequest = self.createGuessMsg(row, column)
                         PLAYER1.changeTurn()
+                        self.textChange("Waiting on opponent")
 
                 elif column > AMOUNT and row < AMOUNT and PLAYER1.buildTime and not updates:  # right
                     column = column - AMOUNT - XOff
@@ -67,7 +78,7 @@ class BoardGame:
     def game_Coloring(self):
         # Set the screen background
         self.screen.fill(WHITE)
-
+        self.screen.blit(self.text, self.textRect) 
         # Draw the grid no mouse action monitoring here
         for row in range(self.AMOUNT):
             for column in range(self.AMOUNT):
@@ -185,12 +196,17 @@ class BoardGame:
 
     # this makes makes the game go from setting up to actually guessing
     def sendStartGame(self):
+        self.textChange("waiting on opponent")
         self.game_Coloring()
         self.game_Event(updates=True)
         PLAYER1.startGuessing()  # player is ready
         readyMsg = self.createReadyMsg()  # creates ready message
         response = socClient.sendMessage(readyMsg)  # sends ready message to other player
         self.readRespMessage(response)  # make sure it is a ready/ could be an end message
+        if PLAYER1.isTurn:
+            self.textChange("your turn")
+            self.game_Coloring()
+            self.game_Event(updates=True)
     
 
     def endGameBoard(self):
@@ -207,7 +223,7 @@ def main_LOOP(p1):
         if not p1.done:
             hitMessage = p1.game_Event()
             p1.game_Coloring()
-            if hitMessage is not "":
+            if hitMessage != "":
                 p1.game_Event(updates=True)
                 response = p1.sendMessage(hitMessage)  # send p1.message across
                 p1.readRespMessage(response)  # send p1.response 
@@ -216,6 +232,7 @@ def main_LOOP(p1):
                 resp = socClient.receiveMessage()
                 p1.readRespMessage(resp) 
                 PLAYER1.changeTurn()
+                p1.textChange("Your turn!")
                
         else:
             timeOut += 1
@@ -254,15 +271,16 @@ while True:
     p1.make_window()
 
     main_LOOP(p1)
-    pygame.quit()
     # only player1's status is broadcasted
     if PLAYER1.win == True:
-        print("you won!")
+        p1.textChange("you won! check terminal")
     else:
-        print("you lost")
-
-    # do thy want to play again
+        p1.textChange("you lost, check terminal")
+    p1.game_Coloring()
+    p1.game_Event(updates=True)
     x = input("Want to play again:(y/n)")
+    pygame.quit()
+    # do thy want to play again
     if x.capitalize() != "Y":
         print("Byyyeeeee")
         socClient.end()

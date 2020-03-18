@@ -87,20 +87,21 @@ def handle_client_thread(c):
                     c.close()
                     break
                 else:
-                    game = OngoingGames[c_game_id]
-                    opponent_id = ""
-                    if game[0] == c_player_id:
-                        opponent_id = game[1]
-                    else:
-                        opponent_id = game[0]
-                    end_msg = "END SERVER " + c_game_id
-                    Users[opponent_id].send(end_msg.encode())
-                    del OngoingGames[c_game_id]
-                    del Users[c_player_id]
-                    del Users[opponent_id]
+                    if c_game_id in OngoingGames:
+                        game = OngoingGames[c_game_id]
+                        opponent_id = ""
+                        if game[0] == c_player_id:
+                            opponent_id = game[1]
+                        else:
+                            opponent_id = game[0]
+                        end_msg = "END SERVER " + c_game_id
+                        Users[opponent_id].send(end_msg.encode())
+                        del OngoingGames[c_game_id]
+                        del Users[c_player_id]
+                        del Users[opponent_id]
                     c.close()
                     break
-        else:
+        elif c_game_id in OngoingGames:
             print("================")
             print(client_msg)
             split_msg = client_msg.split()
@@ -125,6 +126,7 @@ def handle_client_thread(c):
 
         client_msg = ""
     c.close()
+    
 
 
 # doesn't do anything right now except set up server
