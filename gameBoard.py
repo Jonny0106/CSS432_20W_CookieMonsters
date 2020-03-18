@@ -276,11 +276,11 @@ while True:
     # only player1's status is broadcasted
     if PLAYER1.win:
         if PLAYER1.serverCrash:
-            p1.textChange("Disconection")
+            p1.textChange("Opponent has disconnected. Check Terminal.")
         else:
-            p1.textChange("you won! check terminal")
+            p1.textChange("YOU WON! CHECK TERMINAL!")
     else:
-        p1.textChange("you lost, check terminal")
+        p1.textChange("you lost. check terminal")
     p1.game_Coloring()
     p1.game_Event(updates=True)
     x = input("Want to play again:(y/n)")
