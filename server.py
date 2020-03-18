@@ -26,7 +26,10 @@ def handle_client_thread(c):
     c_player_id = ""
     c_game_id = ""
     while True:
-        client_msg = c.recv(1024).decode('utf-8', 'ignore')
+        try:
+            client_msg = c.recv(1024).decode('utf-8', 'ignore')
+        except:
+            client_msg = ""
         if "NEW" in client_msg:
             print(client_msg)
             split_new = client_msg.split()

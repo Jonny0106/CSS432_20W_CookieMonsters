@@ -130,6 +130,8 @@ class BoardGame:
         elif split[0] == "END":
             if split[1] != socClient.player_id:
                 PLAYER1.win = True
+                if split[1] == "SERVER":
+                    PLAYER1.serverCrash = True
                 PLAYER1.grid = [[2 for i in range(self.AMOUNT)] for j in range(self.AMOUNT)]
                 # when end the screen turns red
             self.done = True
@@ -272,8 +274,11 @@ while True:
 
     main_LOOP(p1)
     # only player1's status is broadcasted
-    if PLAYER1.win == True:
-        p1.textChange("you won! check terminal")
+    if PLAYER1.win:
+        if PLAYER1.serverCrash:
+            p1.textChange("Disconection")
+        else:
+            p1.textChange("you won! check terminal")
     else:
         p1.textChange("you lost, check terminal")
     p1.game_Coloring()
@@ -281,7 +286,8 @@ while True:
     x = input("Want to play again:(y/n)")
     pygame.quit()
     # do thy want to play again
+    socClient.end()
     if x.capitalize() != "Y":
         print("Byyyeeeee")
-        socClient.end()
         break
+

@@ -6,8 +6,8 @@ class Client:
     def __init__(self):
         print("Welcome to Team Cookie Monsters' Battleship Game!")
         self.s = socket.socket()
-        self.host = "10.155.176.29"
-        # self.host = socket.gethostname()
+        # self.host = "10.155.176.29"
+        self.host = socket.gethostname()
         self.port = 6010
         self.s.connect((self.host, self.port))
         self.goFirst = False
@@ -138,7 +138,11 @@ class Client:
         
     def receiveMessage(self):
         # wait until opponent sends a guess
-        message = self.s.recv(1024).decode('utf-8', 'ignore')
+        try:
+            message = self.s.recv(1024).decode('utf-8', 'ignore')
+        except:
+            message = "END SERVER " + self.game_id + "message"
+        
         return message
 
     def end(self):

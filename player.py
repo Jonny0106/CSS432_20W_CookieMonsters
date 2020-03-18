@@ -21,6 +21,7 @@ class Player:
         self.maxBoatSize = 7
         self.tickerStart = 0
         self.win = False
+        self.serverCrash = False
 
     def make_grid(self, AMOUNT):
         self.AMOUNT = AMOUNT
