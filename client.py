@@ -1,10 +1,13 @@
 import socket
 import json
+import gameBoard
+import pygame
 
 
 class Client:
-    def __init__(self):
-        print("Welcome to Team Cookie Monsters' Battleship Game!")
+    def __init__(self, p1):
+        self.p1 = p1
+        self.printDisplay("Welcome to Team Cookie Monsters' Battleship Game!")
         self.s = socket.socket()
         # self.host = "10.155.176.29"
         self.host = socket.gethostname()
@@ -17,22 +20,22 @@ class Client:
         rec = ""
         while "CONFIRMED" not in rec:
             if not first_ask:
-                print("That name looks to be taken already. Please try another name.")
+                self.printDisplay("That name looks to be taken already. Please try another name.")
             request_player_id = "NEW " + self.ask_for_name()
             self.s.send(request_player_id.encode())
             rec = str(self.s.recv(1024).decode('utf-8', 'ignore'))
             first_ask = False
         self.player_id = rec.split()[1]
         self.game_id = ""
-        print("Connection established with server!")
-        print("Your player ID is: " + self.player_id)
+        self.printDisplay("Connection established with server!",)
+        self.printDisplay("Your player ID is: " + self.player_id, end="keep")
         self.ask_for_choice()
 
     def ask_for_name(self):
-        print("Enter your name: ", end="")
+        self.printDisplay("Enter your name: ", end="keep")
         req_name = input()
         while req_name == "":
-            print("Invalid name. Please enter your name: ", end="")
+            self.printDisplay("Invalid name. Please enter your name: ")
             req_name = input()
         return self.change_spaces_to_underscores(req_name)
 
@@ -47,7 +50,7 @@ class Client:
         return ret_str[:-1]
 
     def ask_for_choice(self):
-        print("Please enter a 'j' to list all of the possible games to join or a 'c' to create a new game: ", end="")
+        self.printDisplay("Please enter a 'j' to list all of the possible games to join or a 'c' to create a new game: ", end="keep")
         choice = input()
 
         while True:
@@ -55,29 +58,28 @@ class Client:
                 self.act_on_choice(choice)
                 break
             else:
-                print("'j' or 'c' was not entered. Enter 'j' to join a game or 'c' to create a game: ", end="")
+                self.printDisplay("'j' or 'c' was not entered. Enter 'j' to join a game or 'c' to create a game: ", end="keep")
                 choice = input()
 
     def print_waiting_games(self, string_of_dict):
         dict_of_waiting_games = json.loads(string_of_dict)
         if not dict_of_waiting_games:
-            print("No one is waiting. Please create a new game.")
+            self.printDisplay("No one is waiting. Please create a new game.")
         else:
             for game_id in dict_of_waiting_games:
-                print("Game ID: " + game_id + " Player ID: " + dict_of_waiting_games[game_id])
+                self.printDisplay("Game ID: " + game_id + " Player ID: " + dict_of_waiting_games[game_id],end="keep")
 
     # start game once both players have joined
     def start_game(self, given_game_id):
         hello_msg = "MSG " + self.player_id + " " + given_game_id + " Hello this is your opponent, " + self.player_id + " on game " + given_game_id
-        print("-sending-" + hello_msg)
+        self.printDisplay("-sending-" + hello_msg)
         self.s.send(hello_msg.encode())
         hello_response = self.s.recv(1024).decode('utf-8', 'ignore')
-        print(hello_response)
+        self.printDisplay(hello_response, end="keep")
 
     def act_on_choice(self, choice):
         if choice == "j":
-            print()
-            print("Here are a list of games you can join:")
+            self.printDisplay("Here are a list of games you can join:")
             # request dictionary of WaitingGames from server
             create_msg = "LIST " + self.player_id
             self.s.send(create_msg.encode())
@@ -86,46 +88,44 @@ class Client:
             string_of_dict = self.s.recv(1024).decode('utf-8', 'ignore')
             self.print_waiting_games(string_of_dict)
 
-            print("Please enter in the Game ID of the game you would like to join.")
-            print("If there are no games you would like to join, enter 'c' to create a new game: ", end="")
+            self.printDisplay("Please enter in the Game ID of the game you would like to join.", end="keep")
+            self.printDisplay("If there are no games you would like to join, enter 'c' to create a new game: ", end="keep")
             self.act_on_choice(input())
         elif choice == "c":
-            print()
-            print("Creating new game...")
+            self.printDisplay("")
+            self.printDisplay("Creating new game...")
             # tell server to create a new game (send player_id)
             create_msg = "CREATE " + self.player_id
             self.s.send(create_msg.encode())
-            print("Game has been created. Please wait for another player to join...")
+            self.printDisplay("Game has been created. Please wait for another player to join...", end="keep")
             self.goFirst = True
             create_start_response = self.s.recv(1024).decode('utf-8', 'ignore')
             if "JOINED" in create_start_response:
-                print("Successfully joined game!")
+                self.printDisplay("Successfully joined game!")
                 self.game_id = create_start_response.split()[1]
-                print(self.game_id)
+                self.printDisplay(self.game_id, end="keep")
                 # open the gamegrid and send back and forth the coordinates of hits and misses
                 self.start_game(self.game_id)
         elif choice != "":
-            print("Joining game...")
+            self.printDisplay("Joining game...")
             # tell server to join a new game (send game_id and player_id)
             # in this case, choice is the game_id
             create_msg = "JOIN " + self.player_id + " " + choice
             self.s.send(create_msg.encode())
             join_response = self.s.recv(1024).decode('utf-8', 'ignore')
             if "JOINED" in join_response:
-                print("Successfully joined game!")
+                self.printDisplay("Successfully joined game!")
                 self.game_id = join_response.split()[1]
-                print(self.game_id)
+                self.printDisplay(self.game_id)
 
                 # open the gamegrid and send back and forth the coordinates of hits and misses
                 self.start_game(self.game_id)
             else:
-                print("Could not join game. Please make sure to enter in the correct game ID (no quotes).")
-                print()
+                self.printDisplay("Could not join game. Please make sure to enter in the correct game ID (no quotes).", end="keep")
                 self.ask_for_choice()
         else:
-            print()
-            print("You have not entered anything. Let's start over.")
-            self.ask_for_choice()
+            self.printDisplay("You have not entered anything. Let's start over.")
+            self.ask_for_choice("")
 
     def sendMessage(self, message):
         # send message out
@@ -135,7 +135,7 @@ class Client:
 
     def sendMessageResponse(self, message):
         self.s.send(message.encode())
-        
+
     def receiveMessage(self):
         # wait until opponent sends a guess
         message = self.s.recv(1024).decode('utf-8', 'ignore')
@@ -143,3 +143,18 @@ class Client:
 
     def end(self):
         self.s.close()
+    
+    def printDisplay(self, Dstr, end=""):
+        if "keep" not in end:
+            self.p1.dispayText = []
+        while len(Dstr) >= 50:
+            str1 = Dstr[:50]
+            Dstr = "-" + Dstr[50:]
+            self.p1.dispayText.append(str1)
+        
+        self.p1.dispayText.append(Dstr)
+        self.p1.game_Coloring()
+        self.p1.textChange(self.p1.dispayText)
+        
+        self.p1.game_Coloring()
+        self.p1.game_Event()

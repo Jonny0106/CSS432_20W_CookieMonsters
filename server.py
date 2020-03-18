@@ -23,8 +23,10 @@ WaitingGames = {}
 
 
 def handle_client_thread(c):
+    
     while True:
         client_msg = c.recv(1024).decode('utf-8', 'ignore')
+        
         if "NEW" in client_msg:
             print(client_msg)
             split_new = client_msg.split()

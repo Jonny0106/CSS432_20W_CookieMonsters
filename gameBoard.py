@@ -5,6 +5,25 @@ import enum
 import client
 
 
+XOff = 1  # amount of tiles apart are the left and right grids
+YOff = 1  # amount of tiles apart are the top and bottom grids
+
+BLUE = (135, 206, 250)
+RED = (255, 0, 0)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+WINDOW_X = 350
+WINDOW_Y = 350
+square_size = 24
+MARGIN = 1
+AMOUNT = WINDOW_Y // (square_size + MARGIN)
+WINDOW_X = WINDOW_Y * 2 + 50
+SIZE_OF_UNDER = 100 
+TEXT_X = 10
+WINDOW_Y = WINDOW_Y + SIZE_OF_UNDER
+TEXT_Y = WINDOW_Y - SIZE_OF_UNDER
+
 # each player gets a board
 class BoardGame:
     # constructor
@@ -14,21 +33,41 @@ class BoardGame:
         self.margin = margin
         self.AMOUNT = AMOUNT
         self.WINDOW_Y = WINDOW_Y
-        # font = pygame.font.Font('freesansbold.ttf', 32) 
-        # text = font.render('GeeksForGeeks', True, green, blue) 
-        # textRect = text.get_rect()  
-  
-        # set the center of the rectangular object. 
-        textRect.center = (X // 2, Y // 2) 
+        self.PLAYER1 = player.Player(0)
+        self.PLAYER1.make_grid(AMOUNT)  # creates grid for player1(top)
+        self.dispayText = ""
 
     def make_window(self):
         self.WINDOW_SIZE = [self.WINDOW_X, self.WINDOW_Y + 20]
         pygame.init()
-        self.screen = pygame.display.set_mode(self.WINDOW_SIZE)
+        self.screen = pygame.display.set_mode(self.WINDOW_SIZE, pygame.RESIZABLE)
+        self.textChange(("", ""))
         pygame.display.set_caption("Array Backed Grid")
         self.clock = pygame.time.Clock()
         self.done = False
 
+
+        self.socClient = client.Client(self)
+        self.game_Coloring()
+        self.PLAYER1.gameID = self.socClient.game_id
+        self.PLAYER1.firstTurn = self.socClient.goFirst
+        self.PLAYER1.playerID = self.socClient.player_id
+
+    def textChange(self, textStr):
+        #geeks code
+        i = 0
+        self.textList = []
+        self.textRectList = []
+        self.dispayText = textStr
+        self.font = pygame.font.Font(pygame.font.get_default_font(), 20)
+        for line in self.dispayText:
+            self.textList.append(self.font.render(line, True, BLACK, BLUE))
+            self.textRectList.append(self.textList[-1].get_rect())
+            self.textRectList[-1].left = TEXT_X
+            self.textRectList[-1].top = TEXT_Y + i
+            i += 25
+        print(textStr)
+        ##geeks endd
     def game_Event(self):
         guessRequest = ""  # guess request for player1
         # for loop  records the mouse clicks
@@ -50,42 +89,46 @@ class BoardGame:
                 # next lines check what grid was clicked. Amount is the length in row and column direction
 
                 # top grids
-                if column < AMOUNT and row < AMOUNT and PLAYER1.isTurn:  # left
-                    if PLAYER1.grid[row][column] == 0:
+                if column < AMOUNT and row < AMOUNT and self.PLAYER1.isTurn:  # left
+                    if self.PLAYER1.grid[row][column] == 0:
                         guessRequest = self.createGuessMsg(row, column)
-                        PLAYER1.changeTurn()
+                        self.PLAYER1.changeTurn()
 
-                elif column > AMOUNT and row < AMOUNT and PLAYER1.buildTime:  # right
+                elif column > AMOUNT and row < AMOUNT and self.PLAYER1.buildTime:  # right
                     column = column - AMOUNT - XOff
                     # checks the column is in range
                     if column < AMOUNT and column >= 0:
-                        PLAYER1.creatingBoat(row, column)
-                        if not PLAYER1.buildTime:
+                        self.PLAYER1.creatingBoat(row, column)
+                        if not self.PLAYER1.buildTime:
                             self.sendStartGame()
         return guessRequest
 
     def game_Coloring(self):
         # Set the screen background
         self.screen.fill(WHITE)
-
+        for i in range(len(self.textRectList)):
+            self.screen.blit(self.textList[i], self.textRectList[i])
+        
+        pygame.display.update()
+        
         # Draw the grid no mouse action monitoring here
         for row in range(self.AMOUNT):
             for column in range(self.AMOUNT):
                 # top grids are made
-                color = self.color_single_grid(PLAYER1.grid, row, column)  # left top
+                color = self.color_single_grid(self.PLAYER1.grid, row, column)  # left top
                 self.draw_grid_1st(row, column, 0, color)  #
 
-                color2 = self.color_2nd(PLAYER1.grid2, row, column)  # right top
+                color2 = self.color_2nd(self.PLAYER1.grid2, row, column)  # right top
                 self.draw_2nd(row, column, 0, color2)
 
         # Limit to 60 frames per second
         self.clock.tick(60)
-        pygame.display.flip()
+    
 
     # reads the message passed through the socket (that will be passed)
     # at this moment no socket so all done locally
     def sendMessage(self, request):
-        response = socClient.sendMessage(request)
+        response = self.socClient.sendMessage(request)
         return response
 
     # reads response message and updates board
@@ -96,52 +139,52 @@ class BoardGame:
             row = int(split[3])
             column = int(split[4])
             # If hit, create HIT message
-            if PLAYER1.hitsBoats(row, column):
-                PLAYER1.grid2[row][column] = 3
-                if len(PLAYER1.BoatDict) == 0:
+            if self.PLAYER1.hitsBoats(row, column):
+                self.PLAYER1.grid2[row][column] = 3
+                if len(self.PLAYER1.BoatDict) == 0:
                     self.endGameBoard()    
                 else:
-                    socClient.sendMessageResponse(self.createHitMsg(row, column))
+                    self.socClient.sendMessageResponse(self.createHitMsg(row, column))
             # Else create MISS message
             else:
-                PLAYER1.grid2[row][column] = 2
-                socClient.sendMessageResponse(self.createMissMsg(row, column))
+                self.PLAYER1.grid2[row][column] = 2
+                self.socClient.sendMessageResponse(self.createMissMsg(row, column))
         elif split[0] == "HIT":
             row = int(split[3])
             column = int(split[4])
-            PLAYER1.grid[row][column] = 2
+            self.PLAYER1.grid[row][column] = 2
         elif split[0] == "MISS":
             row = int(split[3])
             column = int(split[4])
-            PLAYER1.grid[row][column] = 1
+            self.PLAYER1.grid[row][column] = 1
         elif split[0] == "READY":
-            PLAYER1.startGuessing()
+            self.PLAYER1.startGuessing()
         elif split[0] == "END":
-            if split[1] != socClient.player_id:
-                PLAYER1.win = True
-                PLAYER1.grid = [[2 for i in range(self.AMOUNT)] for j in range(self.AMOUNT)]
+            if split[1] != self.socClient.player_id:
+                self.PLAYER1.win = True
+                self.PLAYER1.grid = [[2 for i in range(self.AMOUNT)] for j in range(self.AMOUNT)]
                 # when end the screen turns red
             self.done = True
 
     def createGuessMsg(self, row, column):
         # format: GUESS player_id game_id row, column
-        return "GUESS" + " " + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + " " + str(column)
+        return "GUESS" + " " + str(self.PLAYER1.playerID) + " " + str(self.socClient.game_id) + " " + str(row) + " " + str(column)
 
     def createHitMsg(self, row, column):
         # format: HIT player_id game_id row, column
-        return "HIT" + " " + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + " " + str(column)
+        return "HIT" + " " + str(self.PLAYER1.playerID) + " " + str(self.socClient.game_id) + " " + str(row) + " " + str(column)
 
     def createMissMsg(self, row, column):
         # format: MISS player_id game_id row, column
-        return "MISS" + " " + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + str(row) + " " + str(column)
+        return "MISS" + " " + str(self.PLAYER1.playerID) + " " + str(self.socClient.game_id) + " " + str(row) + " " + str(column)
 
     def createReadyMsg(self):
         # format: READY player_id game_id
-        return "READY" + " " + str(PLAYER1.playerID) + " " + str(socClient.game_id)
+        return "READY" + " " + str(self.PLAYER1.playerID) + " " + str(self.socClient.game_id)
 
     def createEndMsg(self, message):
         # format: END player_id game_id message
-        return "END" + " " + str(PLAYER1.playerID) + " " + str(socClient.game_id) + " " + message
+        return "END" + " " + str(self.PLAYER1.playerID) + " " + str(self.socClient.game_id) + " " + message
 
     # draws the left grid (the one clicked on)
     def color_single_grid(self, Grid, row, column):
@@ -187,20 +230,20 @@ class BoardGame:
     # this makes makes the game go from setting up to actually guessing
     def sendStartGame(self):
         
-        PLAYER1.startGuessing()  # player is ready
+        self.PLAYER1.startGuessing()  # player is ready
         readyMsg = self.createReadyMsg()  # creates ready message
-        response = socClient.sendMessage(readyMsg)  # sends ready message to other player
+        response = self.socClient.sendMessage(readyMsg)  # sends ready message to other player
         self.readRespMessage(response)  # make sure it is a ready/ could be an end message
     
 
     def endGameBoard(self):
         endMsg = self.createEndMsg("Loss")  # create end message
         while not self.done:  # makes sure that server is on track with exit
-            response = socClient.sendMessage(endMsg)  # send end message
+            response = self.socClient.sendMessage(endMsg)  # send end message
             self.readRespMessage(response)  # make sure it is a ready/ could be an end message
             # self.done = True    will be called in readMessage      # Flag that we are done so we exit this loop
 
-
+        
 def main_LOOP(p1):
     timeOut = 0
     while not p1.done and timeOut < 2:
@@ -211,57 +254,39 @@ def main_LOOP(p1):
             if hitMessage is not "":
                 response = p1.sendMessage(hitMessage)  # send p1.message across
                 p1.readRespMessage(response)  # send p1.response 
-            elif (not PLAYER1.isTurn) and PLAYER1.tickerStart == 2:
-                resp = socClient.receiveMessage()
+            elif (not p1.PLAYER1.isTurn) and p1.PLAYER1.tickerStart == 2:
+                resp = p1.socClient.receiveMessage()
                 p1.readRespMessage(resp) 
-                PLAYER1.changeTurn()
-               
+                p1.PLAYER1.changeTurn()
         else:
             timeOut += 1
         p1.game_Coloring()
 
 
-XOff = 1  # amount of tiles apart are the left and right grids
-YOff = 1  # amount of tiles apart are the top and bottom grids
 
-BLUE = (135, 206, 250)
-RED = (255, 0, 0)
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
+def main():
+    while True:
+        PLAYER1 = player.Player(0)
+        PLAYER1.make_grid(AMOUNT)  # creates grid for player1(top)
 
-WINDOW_X = 350
-WINDOW_Y = 350
-square_size = 24
-MARGIN = 1
-AMOUNT = WINDOW_Y // (square_size + MARGIN)
-WINDOW_X = WINDOW_Y * 2 + 50
-SIZE_OF_UNDER = 100 
-TEXT_X = 10
-WINDOW_Y = WINDOW_Y + SIZE_OF_UNDER
-TEXT_Y = WINDOW_Y - SIZE_OF_UNDER
+        p1 = BoardGame(WINDOW_X, WINDOW_Y, square_size, MARGIN, AMOUNT)
+        p1.make_window()
 
-while True:
-    socClient = client.Client()
-    PLAYER1 = player.Player(socClient.player_id)
-    PLAYER1.gameID = socClient.game_id
-    PLAYER1.firstTurn = socClient.goFirst
+    
 
-    PLAYER1.make_grid(AMOUNT)  # creates grid for player1(top)
+        main_LOOP(p1)
+        pygame.quit()
+        # only player1's status is broadcasted
+        if p1.PLAYER1.win == True:
+            print("you won!")
+        else:
+            print("you lost")
 
-    p1 = BoardGame(WINDOW_X, WINDOW_Y, square_size, MARGIN, AMOUNT)
-    p1.make_window()
-
-    main_LOOP(p1)
-    pygame.quit()
-    # only player1's status is broadcasted
-    if PLAYER1.win == True:
-        print("you won!")
-    else:
-        print("you lost")
-
-    # do thy want to play again
-    x = input("Want to play again:(y/n)")
-    if x.capitalize() != "Y":
-        print("Byyyeeeee")
-        socClient.end()
-        break
+        # do thy want to play again
+        x = input("Want to play again:(y/n)")
+        if x.capitalize() != "Y":
+            print("Byyyeeeee")
+            p1.socClient.end()
+            break
+if __name__ == "__main__":
+    main()
