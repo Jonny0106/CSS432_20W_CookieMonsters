@@ -19,7 +19,7 @@ class BoardGame:
         # textRect = text.get_rect()  
   
         # set the center of the rectangular object. 
-        textRect.center = (X // 2, Y // 2) 
+        # textRect.center = (X // 2, Y // 2) 
 
     def make_window(self):
         self.WINDOW_SIZE = [self.WINDOW_X, self.WINDOW_Y + 20]
@@ -29,7 +29,7 @@ class BoardGame:
         self.clock = pygame.time.Clock()
         self.done = False
 
-    def game_Event(self):
+    def game_Event(self, updates=False):
         guessRequest = ""  # guess request for player1
         # for loop  records the mouse clicks
         for event in pygame.event.get():  # User did something
@@ -50,12 +50,12 @@ class BoardGame:
                 # next lines check what grid was clicked. Amount is the length in row and column direction
 
                 # top grids
-                if column < AMOUNT and row < AMOUNT and PLAYER1.isTurn:  # left
+                if column < AMOUNT and row < AMOUNT and PLAYER1.isTurn and not updates:  # left
                     if PLAYER1.grid[row][column] == 0:
                         guessRequest = self.createGuessMsg(row, column)
                         PLAYER1.changeTurn()
 
-                elif column > AMOUNT and row < AMOUNT and PLAYER1.buildTime:  # right
+                elif column > AMOUNT and row < AMOUNT and PLAYER1.buildTime and not updates:  # right
                     column = column - AMOUNT - XOff
                     # checks the column is in range
                     if column < AMOUNT and column >= 0:
@@ -161,7 +161,6 @@ class BoardGame:
                                   AMOUNT * positionY + 1),
                           self.square_size,
                           self.square_size])
-
     # draws the one that shows hits right side
     def color_2nd(self, Grid, row, column):
         color = BLUE
@@ -186,7 +185,8 @@ class BoardGame:
 
     # this makes makes the game go from setting up to actually guessing
     def sendStartGame(self):
-        
+        self.game_Coloring()
+        self.game_Event(updates=True)
         PLAYER1.startGuessing()  # player is ready
         readyMsg = self.createReadyMsg()  # creates ready message
         response = socClient.sendMessage(readyMsg)  # sends ready message to other player
@@ -205,13 +205,14 @@ def main_LOOP(p1):
     timeOut = 0
     while not p1.done and timeOut < 2:
         if not p1.done:
-
             hitMessage = p1.game_Event()
             p1.game_Coloring()
             if hitMessage is not "":
+                p1.game_Event(updates=True)
                 response = p1.sendMessage(hitMessage)  # send p1.message across
                 p1.readRespMessage(response)  # send p1.response 
             elif (not PLAYER1.isTurn) and PLAYER1.tickerStart == 2:
+                p1.game_Event(updates=True)
                 resp = socClient.receiveMessage()
                 p1.readRespMessage(resp) 
                 PLAYER1.changeTurn()
@@ -219,6 +220,7 @@ def main_LOOP(p1):
         else:
             timeOut += 1
         p1.game_Coloring()
+        
 
 
 XOff = 1  # amount of tiles apart are the left and right grids
