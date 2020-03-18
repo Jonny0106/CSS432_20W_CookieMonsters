@@ -18,7 +18,7 @@ class Player:
         self.buildTime = True
         self.boatBuildingNum = 2
         self.chosenBuild = []
-        self.maxBoatSize = 3
+        self.maxBoatSize = 7
         self.tickerStart = 0
         self.win = False
 
