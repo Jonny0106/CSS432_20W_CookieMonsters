@@ -23,6 +23,8 @@ WaitingGames = {}
 
 
 def handle_client_thread(c):
+    c_player_id = ""
+    c_game_id = ""
     while True:
         client_msg = c.recv(1024).decode('utf-8', 'ignore')
         if "NEW" in client_msg:
@@ -31,13 +33,14 @@ def handle_client_thread(c):
             req_name = split_new[1]
 
             if req_name in Users:
-                c.send("FAILED".encode())
+                c.send("FAIL".encode())
             else:
                 new_player = split_new[1]
                 confirm_msg = "CONFIRMED " + new_player
                 print("New player: " + new_player)
                 c.send(confirm_msg.encode())
                 Users[new_player] = c
+                c_player_id = new_player
                 print()
         elif "CREATE" in client_msg:
             print(client_msg)
@@ -45,6 +48,7 @@ def handle_client_thread(c):
             player_id = client_msg.split()[1]
             WaitingGames[new_game_id] = player_id
             print(new_game_id + " created for " + player_id)
+            c_game_id = new_game_id
             print(WaitingGames)
             print()
         elif "JOIN" in client_msg:
@@ -58,7 +62,7 @@ def handle_client_thread(c):
                 print(OngoingGames)
                 create_msg = "JOINED " + requested_game_id
                 c.send(create_msg.encode())
-
+                c_game_id = requested_game_id
                 Users[other_player_id].send(create_msg.encode())
             else:
                 c.send("FAIL".encode())
@@ -68,6 +72,34 @@ def handle_client_thread(c):
             print(client_msg)
             c.send(json.dumps(WaitingGames).encode('utf-8', 'ignore'))
             print()
+        elif client_msg == "":
+            if c_game_id == "" and c_player_id == "":
+                c.close()
+                break
+            elif c_game_id == "":
+                del Users[c_player_id]
+                c.close()
+                break
+            else:
+                if c_game_id in WaitingGames:
+                    del WaitingGames[c_game_id]
+                    del Users[c_player_id]
+                    c.close()
+                    break
+                else:
+                    game = OngoingGames[c_game_id]
+                    opponent_id = ""
+                    if game[0] == c_player_id:
+                        opponent_id = game[1]
+                    else:
+                        opponent_id = game[0]
+                    end_msg = "END SERVER " + c_game_id
+                    Users[opponent_id].send(end_msg.encode())
+                    del OngoingGames[c_game_id]
+                    del Users[c_player_id]
+                    del Users[opponent_id]
+                    c.close()
+                    break
         else:
             print("================")
             print(client_msg)
